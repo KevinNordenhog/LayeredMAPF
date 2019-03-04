@@ -10,7 +10,7 @@ blue = (0,0,255)
 
 class Cell:
 
-    obsticle = False
+    obstacle = False
     occupied = False
 
     def __init__(self, x, y, size):

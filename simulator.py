@@ -26,6 +26,7 @@ class Simulator:
         self.agents = self.createagents(world)  #[] eller {} ??
         planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         self.schedule = planner.schedule
+        print "Execution finished for global planner."
 
     def createagents(self, world):
         agents = []
@@ -36,13 +37,8 @@ class Simulator:
             agents.append(Agent(name, goal, start))
         return agents
 
-
-    def simulate(self, world):
-        pass
-
-    # Plot and animate the grid
-    # updatefig will be called recursively afterwards
-    def show(self):
+    # Start the simulation, plot the grid and update it continously
+    def simulate(self):
         self.fig = plt.figure()
         ax = self.fig.add_subplot(111, aspect='equal')
         patches = []
@@ -63,8 +59,16 @@ class Simulator:
         # Animate and plot
         for p in patches:
             ax.add_patch(p)        
-        ani = animation.FuncAnimation(self.fig, self.updatefig)
+        ani = animation.FuncAnimation(self.fig, self.update)
         plt.show()
+    
+    # Run the local planner
+    def update(self, *args):
+        #if deviation():
+        #    localplanner()
+        #moveagents()
+        #self.updatefig(self, *args)
+        pass
 
     # Update the figure to show the current grid
     def updatefig(self, *args):
@@ -80,5 +84,4 @@ if __name__ == "__main__":
         world = yaml.load(map_file)
     
     simulator = Simulator(world)
-    simulator.show()
-
+    simulator.simulate()

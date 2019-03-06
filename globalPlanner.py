@@ -30,8 +30,6 @@ class GlobalPlanner:
         cost_so_far[start] = 0
         path = []
         
-        print (goal)
-
         while not frontier.empty():
             current = frontier.get()
             if current == goal:

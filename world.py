@@ -10,16 +10,14 @@ class Cell:
 class Grid:
     def __init__(self, world):
         grid = []
-        x,y = world["map"]["dimensions"]
-        for i in range(0,x):
+        self.width, self.heigth = world["map"]["dimensions"]
+        for i in range(0,self.width):
             grid.append([])
-            for j in range(0,y):
+            for j in range(0,self.heigth):
                 cell = Cell(i,j)
                 if (i,j) in world["map"]["obstacles"]:
-                    #cell.color = black
                     cell.obstacle = True
                 grid[i].append(cell)
-        
         self.grid = grid
 
 

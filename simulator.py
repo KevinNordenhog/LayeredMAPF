@@ -26,9 +26,6 @@ class Simulator:
         self.agents = self.createagents(world)  #[] eller {} ??
         planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         self.schedule = planner.schedule
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, aspect='equal')
-        self.patches = []
 
     def createagents(self, world):
         agents = []
@@ -43,31 +40,33 @@ class Simulator:
     def simulate(self, world):
         pass
 
+    # Plot and animate the grid
+    # updatefig will be called recursively afterwards
     def show(self):
-        heigth = len(self.grid.grid)
-        width = len(self.grid.grid[0])
-        plt.xlim(0, heigth)
-        plt.ylim(0, width)
-        self.patches.append(Rectangle(
-            (0, 0), heigth, width, facecolor='none', edgecolor='red'))       
-        #Draw walls
+        self.fig = plt.figure()
+        ax = self.fig.add_subplot(111, aspect='equal')
+        patches = []
+        plt.xlim(0, self.grid.heigth)
+        plt.ylim(0, self.grid.width)
+        patches.append(Rectangle(
+            (0, 0), self.grid.heigth, self.grid.width, facecolor='none', edgecolor='red'))       
+        # Show static world (open or obstacle)
         for row in self.grid.grid:
             for cell in row:
                 if cell.obstacle:
-                    self.patches.append(Rectangle(
+                    patches.append(Rectangle(
                         (cell.x, cell.y), 1, 1, facecolor='red', edgecolor='black'))
-                
+        # Show schedule given by path finding algorithm
         for cell in self.schedule:
-            self.patches.append(Rectangle(
+            patches.append(Rectangle(
                 (cell[0], cell[1]), 1, 1, facecolor='blue', edgecolor='black'))
-
-        for p in self.patches:
-            self.ax.add_patch(p)        
-
+        # Animate and plot
+        for p in patches:
+            ax.add_patch(p)        
         ani = animation.FuncAnimation(self.fig, self.updatefig)
         plt.show()
 
-
+    # Update the figure to show the current grid
     def updatefig(self, *args):
         pass
 

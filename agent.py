@@ -5,3 +5,4 @@ class Agent:
         self.pos = pos
         self.x = pos[0]
         self.y = pos[1]
+        self.step = 0

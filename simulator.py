@@ -69,7 +69,7 @@ class Simulator:
         # Animate and plot
         for p in patches:
             ax.add_patch(p)
-        self.step = 0
+        #self.step = 0
         ani = animation.FuncAnimation(self.fig, self.update)
         plt.show()
     
@@ -93,20 +93,22 @@ class Simulator:
 
     def getPos(self, agent):
         currentP = self.circles[agent.name].center # the circles position
-        curr = self.schedule[agent.name][self.step]
-        print (curr)
+        #curr = self.schedule[agent.name][self.step]
+        #print (curr)
         #nxt = self.schedule[agent.name][self.step+1] 
         
-        if not curr == agent.goal:
-            nxt = self.schedule[agent.name][self.step+1]
+        if not agent.pos == agent.goal:
+            curr = self.schedule[agent.name][agent.step]
+            if not curr == agent.goal:
+                nxt = self.schedule[agent.name][agent.step+1]
         
-            #currentP[0] = currentP[0] + 0.1*(nxt[0]-curr[0])
-            #currentP[1] = currentP[1] + 0.1*(nxt[1]-curr[1])
-            print (currentP)
-            currentP = tuple(map(operator.add, currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
-            currentP = self.roundTuple(currentP)
-            if (currentP == tuple(map(operator.add, nxt, (0.5,0.5)))):
-                self.step += 1
+                #currentP[0] = currentP[0] + 0.1*(nxt[0]-curr[0])
+                #currentP[1] = currentP[1] + 0.1*(nxt[1]-curr[1])
+                print (currentP)
+                currentP = tuple(map(operator.add, currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
+                currentP = self.roundTuple(currentP)
+                if (currentP == tuple(map(operator.add, nxt, (0.5,0.5)))):
+                    agent.step += 1
          
 
         return currentP

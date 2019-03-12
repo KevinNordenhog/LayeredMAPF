@@ -58,9 +58,9 @@ class Simulator:
         
         self.circles = {}
         for agent in self.agents:
-            print (agent)
+            #print (agent)
             self.circles[agent.name] = Circle(
-                (agent.x+0.5, agent.y+0.5), 0.4, facecolor='orange', edgecolor='black')
+                (agent.x+0.5, agent.y+0.5), 0.3, facecolor='orange', edgecolor='black')
             self.circles[agent.name].original_face_color = 'orange'
 
             patches.append(self.circles[agent.name])
@@ -104,7 +104,7 @@ class Simulator:
         
                 #currentP[0] = currentP[0] + 0.1*(nxt[0]-curr[0])
                 #currentP[1] = currentP[1] + 0.1*(nxt[1]-curr[1])
-                print (currentP)
+                #print (currentP)
                 currentP = tuple(map(operator.add, currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
                 currentP = self.roundTuple(currentP)
                 if (currentP == tuple(map(operator.add, nxt, (0.5,0.5)))):

@@ -1,3 +1,4 @@
 # Ignore swp
 *.swp
 *.pyc
+*.yaml

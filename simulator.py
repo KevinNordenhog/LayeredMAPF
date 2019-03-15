@@ -25,6 +25,7 @@ class Simulator:
         self.agents = self.createagents(world)  #[] eller {} ??
         planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         self.schedule = planner.schedule
+        print self.schedule
         print ("Global planner finished executing.")
 
     def createagents(self, world):

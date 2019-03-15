@@ -21,14 +21,14 @@ except:
 
 # Agent configuration
 agent_config = "agents:\n"
-a_positions = []
 a_goals = []
 a_start = []
 for agent in range(args.agents):
-    pos = (random.randint(0,args.size), random.randint(0,args.size))
-    goal = (random.randint(0,args.size), random.randint(0,args.size))
-    start = (random.randint(0,args.size), random.randint(0,args.size))
-    a_positions += [pos]
+    pos_found = False
+    while not pos_found:
+        goal = (random.randint(0,args.size-1), random.randint(0,args.size-1))
+        start = (random.randint(0,args.size), random.randint(0,args.size-1))
+        pos_found = not (start in a_start or goal in a_goals)
     a_goals += [goal]
     a_start += [start]
     # Add agent to config
@@ -46,10 +46,8 @@ obstacles = []
 for obstacle in range(no_obstacles):
     pos_found = False
     while not pos_found:
-        pos = (random.randint(0,args.size), random.randint(0,args.size))
-        pos_found = not (pos in a_positions or
-                pos in a_goals or
-                pos in a_start)
+        pos = (random.randint(0,args.size-1), random.randint(0,args.size-1))
+        pos_found = not (pos in a_goals or pos in a_start)
     obstacles += [pos]
 obstacles.sort()
 # Add obstacles to config

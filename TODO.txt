@@ -1,0 +1,14 @@
+Simulator (bug fixes):
+- Fix "roaming agent", i.e. when a path ends before goal location it continues
+  in the direction it previously had. It should stop instead.
+
+Simulator (new features):
+- Add deviations (map changes each time step)
+- Change color of agent when it reaches goal / cannot reach goal
+- Add support for wait operation (agents may wait at a position before
+  continuing)
+
+
+Map generator (new features):
+- Have default arguments (i.e. if all arguments are not specified, run anyway)
+- Add option to specify start/goal positions of agents

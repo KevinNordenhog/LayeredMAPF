@@ -20,11 +20,12 @@ from globalPlanner import GlobalPlanner
 
 class Simulator:
     def __init__(self, world):
+        print "Initialization..."
         self.grid = Grid(world) #[[object, object],[]] NOTE: grid.grid[x][y]        
         self.agents = self.createagents(world)  #[] eller {} ??
         planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         self.schedule = planner.schedule
-        print ("Execution finished for global planner.")
+        print ("Global planner finished executing.")
 
     def createagents(self, world):
         agents = []
@@ -54,23 +55,21 @@ class Simulator:
         for agent in self.schedule:
             for cell in self.schedule[agent]:
                 patches.append(Rectangle(
-                    (cell[0], cell[1]), 1, 1, facecolor='blue', edgecolor='black'))
+                    (cell[0], cell[1]), 1, 1, alpha=0.2, facecolor='blue', edgecolor='black'))
         
         self.circles = {}
         for agent in self.agents:
-            #print (agent)
             self.circles[agent.name] = Circle(
                 (agent.x+0.5, agent.y+0.5), 0.3, facecolor='orange', edgecolor='black')
             self.circles[agent.name].original_face_color = 'orange'
 
             patches.append(self.circles[agent.name])
 
-                
         # Animate and plot
         for p in patches:
             ax.add_patch(p)
         #self.step = 0
-        ani = animation.FuncAnimation(self.fig, self.update)
+        ani = animation.FuncAnimation(self.fig, self.update, interval=50)
         plt.show()
     
     # Run the local planner
@@ -93,19 +92,12 @@ class Simulator:
 
     def getPos(self, agent):
         currentP = self.circles[agent.name].center # the circles position
-        #curr = self.schedule[agent.name][self.step]
-        #print (curr)
-        #nxt = self.schedule[agent.name][self.step+1] 
-        
         if not agent.pos == agent.goal:
             curr = self.schedule[agent.name][agent.step]
             if not curr == agent.goal:
                 nxt = self.schedule[agent.name][agent.step+1]
-        
-                #currentP[0] = currentP[0] + 0.1*(nxt[0]-curr[0])
-                #currentP[1] = currentP[1] + 0.1*(nxt[1]-curr[1])
-                #print (currentP)
-                currentP = tuple(map(operator.add, currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
+                currentP = tuple(map(operator.add,
+                        currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
                 currentP = self.roundTuple(currentP)
                 if (currentP == tuple(map(operator.add, nxt, (0.5,0.5)))):
                     agent.step += 1
@@ -126,7 +118,5 @@ if __name__ == "__main__":
     with open(args.map) as map_file:
         world = yaml.load(map_file)
 
-    print (world)
-    
     simulator = Simulator(world)
     simulator.simulate()

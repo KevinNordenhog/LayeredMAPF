@@ -26,7 +26,7 @@ def aStar(grid, start, goal, constraints):
     time[start + (0,)] = 0 
     path = []
 
-    print (constraints)
+    #print (constraints)
     done = False
 
     while not frontier.empty():
@@ -40,14 +40,13 @@ def aStar(grid, start, goal, constraints):
             new_cost = cost_so_far[current] + 1
             new_time = time[current] + 1 
             
-            if (node not in cost_so_far) or new_cost < cost_so_far[node]: 
-                
+            if ((node not in cost_so_far) or new_cost < cost_so_far[node]) and node[2] < 50: 
                 if (node[0],node[1]) in constraints:
                     if new_time in constraints[(node[0],node[1])]:
-                        print ("RIP")
-                        print (new_time)
-                        print (node)
-                        print (constraints)
+                        # print ("RIP")
+                        # print (new_time)
+                        # print (node)
+                        # print (constraints)
                         break
                 cost_so_far[node] = new_cost
                 time[node] = new_time
@@ -63,7 +62,7 @@ def aStar(grid, start, goal, constraints):
 
             temp = came_from[temp]
  
-    return path
+    return path[::-1]
 
 
 
@@ -85,7 +84,7 @@ def neighbours(grid, node):
     return neigh
 
 #calculated an estimated distance to the goal
-def heuristic(goal, node): #Borde denna ta hänsyn till tid? (x,y,t)
+def heuristic(goal, node):
     (x1, y1 , z1) = goal
     (x2, y2, z2) = node
     return abs(x1-x2) + abs(y1-y2) + abs(z1-z2)

@@ -84,9 +84,14 @@ class Simulator:
     # Update the figure to show the current grid
     def updatefig(self, *args):
         for agent in self.agents:
+            # Make agent red if goal is unreachable
+            if not agent.goal in self.schedule[agent.name]:
+                self.circles[agent.name].original_face_color = 'red'
+                continue
+            # Update position
             pos = self.getPos(agent) 
             self.circles[agent.name].center = pos
-        #updates the circles
+        # Updates the circles according to new positions
         for agent in self.agents:
             self.circles[agent.name].set_facecolor(self.circles[agent.name].original_face_color)
     

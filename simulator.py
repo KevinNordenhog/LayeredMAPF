@@ -85,30 +85,28 @@ class Simulator:
     def updatefig(self, *args):
         for agent in self.agents:
             pos = self.getPos(agent) 
-            self.circles[agent.name].center = pos#tuple(map(operator.add, pos,(0.5, 0.5)))
+            self.circles[agent.name].center = pos
         #updates the circles
         for agent in self.agents:
             self.circles[agent.name].set_facecolor(self.circles[agent.name].original_face_color)
     
 
+    # Move the agent towards the next position 0.1 step at a time
+    # Return the position after step is taken.
     def getPos(self, agent):
         currentP = self.circles[agent.name].center # the circles position
         if not agent.pos == agent.goal:
             curr = self.schedule[agent.name][agent.step]
             if not curr == agent.goal:
                 nxt = self.schedule[agent.name][agent.step+1]
+                # Step forward 0.1 (and fix rounding error)
                 currentP = tuple(map(operator.add,
                         currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
-                currentP = self.roundTuple(currentP)
+                currentP = (round(currentP[0],1), round(currentP[1],1))
+                # If agent reached next pos, increment it one step
                 if (currentP == tuple(map(operator.add, nxt, (0.5,0.5)))):
                     agent.step += 1
-         
-
         return currentP
-
-    def roundTuple(self, tup):
-        return (round(tup[0],1), round(tup[1],1))
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

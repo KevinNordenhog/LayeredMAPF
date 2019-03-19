@@ -61,7 +61,7 @@ class Simulator:
         for agent in self.agents:
             self.circles[agent.name] = Circle(
                 (agent.x+0.5, agent.y+0.5), 0.3, facecolor='orange', edgecolor='black')
-            self.circles[agent.name].original_face_color = 'orange'
+            self.circles[agent.name].facecolor = 'orange'
 
             patches.append(self.circles[agent.name])
 
@@ -83,23 +83,27 @@ class Simulator:
     # Update the figure to show the current grid
     def updatefig(self, *args):
         for agent in self.agents:
-            # Make agent red if goal is unreachable
+            # Color agent according to if goal is reached or unreachable
             if not agent.goal in self.schedule[agent.name]:
-                self.circles[agent.name].original_face_color = 'red'
+                self.circles[agent.name].facecolor = 'red'
                 continue
+            if (agent.pos == agent.goal and
+                    agent.step == len(self.schedule[agent.name])-1):
+                self.circles[agent.name].facecolor = 'lightgreen'
             # Update position
             pos = self.updatePos(agent) 
             self.circles[agent.name].center = pos
-        # Updates the circles according to new positions
+        # Updates the circles according to new positions and colors
         for agent in self.agents:
-            self.circles[agent.name].set_facecolor(self.circles[agent.name].original_face_color)
+            self.circles[agent.name].set_facecolor(self.circles[agent.name].facecolor)
     
 
     # Move the agent towards the next position 0.1 step at a time
     # Return the position after step is taken.
     def updatePos(self, agent):
         currentP = self.circles[agent.name].center # the circles position
-        if agent.pos == agent.goal:
+        if (agent.pos == agent.goal and 
+                agent.step == len(self.schedule[agent.name])-1):
             return currentP
         curr = self.schedule[agent.name][agent.step]
         nxt = self.schedule[agent.name][agent.step+1]

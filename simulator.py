@@ -25,6 +25,8 @@ class Simulator:
         self.agents = self.createagents(world)  #[] eller {} ??
         planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         self.schedule = planner.schedule
+        self.schedule['agent0'] = [(0,9), (0,8), (0,8), (0,8), (0,7), (1,7),
+        (2,7), (2,7), (3,7)]
         print ("Global planner finished executing.")
 
     def createagents(self, world):
@@ -88,7 +90,7 @@ class Simulator:
                 self.circles[agent.name].original_face_color = 'red'
                 continue
             # Update position
-            pos = self.getPos(agent) 
+            pos = self.updatePos(agent) 
             self.circles[agent.name].center = pos
         # Updates the circles according to new positions
         for agent in self.agents:
@@ -97,27 +99,31 @@ class Simulator:
 
     # Move the agent towards the next position 0.1 step at a time
     # Return the position after step is taken.
-    def getPos(self, agent):
-        agent.rendercount += 1
+    def updatePos(self, agent):
         currentP = self.circles[agent.name].center # the circles position
-        if not agent.pos == agent.goal and agent.iswaiting == False:
-            curr = self.schedule[agent.name][agent.step]
-            if not curr == agent.goal:
-                nxt = self.schedule[agent.name][agent.step+1]
-                # Handle wait
-                if curr == nxt:
-                    agent.iswaiting = True
-                # Step forward 0.1 (and fix rounding error)
-                currentP = tuple(map(operator.add,
-                        currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
-                currentP = (round(currentP[0],1), round(currentP[1],1))
-                # If agent reached next pos, increment it one step
-                if (currentP == tuple(map(operator.add, nxt, (0.5,0.5)))):
-                    agent.step += 1
-        # IF agent is waiting, stop waiting after 10 rendercounts.
+        if agent.pos == agent.goal:
+            return currentP
+        curr = self.schedule[agent.name][agent.step]
+        nxt = self.schedule[agent.name][agent.step+1]
+        # Handle wait
+        agent.rendercount += 1
         if agent.iswaiting:
             agent.iswaiting = agent.rendercount % 10
-        return currentP
+            if not agent.iswaiting:
+                agent.step += 1
+            return currentP
+        if curr == nxt:
+            agent.iswaiting = True
+            return currentP
+        # Otherwise, update and return new position
+        newpos = tuple(map(operator.add,
+                currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
+        newpos = (round(newpos[0],1), round(newpos[1],1))
+        # If agent reached next pos, increment it one step
+        if (newpos == tuple(map(operator.add, nxt, (0.5,0.5)))):
+            agent.pos = nxt
+            agent.step += 1
+        return newpos
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

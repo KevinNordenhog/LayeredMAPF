@@ -20,7 +20,7 @@ from globalPlanner import GlobalPlanner
 
 class Simulator:
     def __init__(self, world):
-        print "Initialization..."
+        print ("Initialization...")
         self.grid = Grid(world) #[[object, object],[]] NOTE: grid.grid[x][y]        
         self.agents = self.createagents(world)  #[] eller {} ??
         planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])

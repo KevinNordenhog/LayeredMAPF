@@ -25,6 +25,7 @@ class Simulator:
         self.agents = self.createagents(world)  #[] eller {} ??
         planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         self.schedule = planner.schedule
+        self.schedule = {'agent0': [(0,9), (0,8), (0,8), (0,7)]}
         print self.schedule
         print ("Global planner finished executing.")
 
@@ -99,11 +100,15 @@ class Simulator:
     # Move the agent towards the next position 0.1 step at a time
     # Return the position after step is taken.
     def getPos(self, agent):
+        agent.rendercount += 1
         currentP = self.circles[agent.name].center # the circles position
-        if not agent.pos == agent.goal:
+        if not agent.pos == agent.goal and agent.iswaiting == False:
             curr = self.schedule[agent.name][agent.step]
             if not curr == agent.goal:
                 nxt = self.schedule[agent.name][agent.step+1]
+                # Handle wait
+                if curr == nxt:
+                    agent.iswaiting = True
                 # Step forward 0.1 (and fix rounding error)
                 currentP = tuple(map(operator.add,
                         currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
@@ -111,6 +116,9 @@ class Simulator:
                 # If agent reached next pos, increment it one step
                 if (currentP == tuple(map(operator.add, nxt, (0.5,0.5)))):
                     agent.step += 1
+        # IF agent is waiting, stop waiting after 10 rendercounts.
+        if agent.iswaiting:
+            agent.iswaiting = agent.rendercount % 10
         return currentP
 
 if __name__ == "__main__":

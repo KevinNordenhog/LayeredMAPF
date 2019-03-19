@@ -6,3 +6,5 @@ class Agent:
         self.x = pos[0]
         self.y = pos[1]
         self.step = 0
+        self.rendercount = 0
+        self.iswaiting = False

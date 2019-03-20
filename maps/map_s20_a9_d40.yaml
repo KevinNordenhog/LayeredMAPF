@@ -1,11 +1,11 @@
 agents:
--   goal: [19, 5] 
-    name: agent0
-    start: [12, 1]
+# -   goal: [19, 5] 
+#     name: agent0
+#     start: [12, 1]
 -   goal: [6, 1]
     name: agent1
     start: [11, 10]
-# -   goal: [17, 4]   -----
+# -   goal: [17, 4]
 #     name: agent2
 #     start: [14, 10]
 # -   goal: [5, 7]
@@ -20,7 +20,7 @@ agents:
 # -   goal: [18, 3]
 #     name: agent6
 #     start: [4, 11]
-# -   goal: [2, 3]    ---------
+# -   goal: [2, 3]  
 #     name: agent7
 #     start: [18, 8]
 # -   goal: [10, 0]

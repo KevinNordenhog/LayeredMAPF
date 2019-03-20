@@ -26,7 +26,6 @@ def aStar(grid, start, goal, constraints):
     time[start + (0,)] = 0 
     path = []
 
-    #print (constraints)
     done = False
 
     while not frontier.empty():
@@ -42,13 +41,27 @@ def aStar(grid, start, goal, constraints):
             
             roof = findRoof(constraints)
 
-            if ((node not in cost_so_far) or new_cost < cost_so_far[node]) and node[2] < roof: 
+            if ((node not in cost_so_far) or new_cost < cost_so_far[node]) and node[2] <= roof: 
+                if node == (11,6,0):
+                    print (node)
+                    print (new_cost)
+                    print ("------------------")
+                if node == (11,6,1):
+                    print (node)
+                    print (new_cost)
+                    print ("------------------")
+
+                
                 if (node[0],node[1]) in constraints:
+                    # print (new_time)
+                    # print (node)
+                    # print (constraints)
                     if new_time in constraints[(node[0],node[1])]:
-                        # print ("RIP")
-                        # print (new_time)
-                        # print (node)
+                        
+                        print (new_time)
+                        print (node)
                         # print (constraints)
+                        print ("RIP")
                         break
                 cost_so_far[node] = new_cost
                 time[node] = new_time
@@ -61,7 +74,7 @@ def aStar(grid, start, goal, constraints):
         temp = current
         while (temp in came_from):
             path.append((temp[0],temp[1]))
-
+            print (temp)
             temp = came_from[temp]
  
     return path[::-1]
@@ -89,7 +102,7 @@ def neighbours(grid, node):
 def heuristic(goal, node):
     (x1, y1 , z1) = goal
     (x2, y2, z2) = node
-    return abs(x1-x2) + abs(y1-y2) + abs(z1-z2)
+    return abs(x1-x2) + abs(y1-y2) #+ abs(z1-z2)
 
 
 def findRoof(constraints):

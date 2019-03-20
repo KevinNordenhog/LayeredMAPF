@@ -40,7 +40,9 @@ def aStar(grid, start, goal, constraints):
             new_cost = cost_so_far[current] + 1
             new_time = time[current] + 1 
             
-            if ((node not in cost_so_far) or new_cost < cost_so_far[node]) and node[2] < 50: 
+            roof = findRoof(constraints)
+
+            if ((node not in cost_so_far) or new_cost < cost_so_far[node]) and node[2] < roof: 
                 if (node[0],node[1]) in constraints:
                     if new_time in constraints[(node[0],node[1])]:
                         # print ("RIP")
@@ -88,3 +90,12 @@ def heuristic(goal, node):
     (x1, y1 , z1) = goal
     (x2, y2, z2) = node
     return abs(x1-x2) + abs(y1-y2) + abs(z1-z2)
+
+
+def findRoof(constraints):
+    roof = 1
+
+    for i in constraints.values():
+        if max(i) > roof:
+            roof = max(i)
+    return roof

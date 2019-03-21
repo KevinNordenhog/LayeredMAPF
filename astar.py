@@ -33,50 +33,26 @@ def aStar(grid, start, goal, constraints):
         if (current[0],current[1]) == goal:
             done = True
             break
- 
         temp = (current[0], current[1], current[2]+1)
         for node in neighbours(grid, current) + [temp]: 
             new_cost = cost_so_far[current] + 1
             new_time = time[current] + 1 
-            
             roof = findRoof(constraints)
-
             if ((node not in cost_so_far) or new_cost < cost_so_far[node]) and node[2] <= roof: 
-                if node == (11,6,0):
-                    print (node)
-                    print (new_cost)
-                    print ("------------------")
-                if node == (11,6,1):
-                    print (node)
-                    print (new_cost)
-                    print ("------------------")
-
-                
                 if (node[0],node[1]) in constraints:
-                    # print (new_time)
-                    # print (node)
-                    # print (constraints)
                     if new_time in constraints[(node[0],node[1])]:
-                        
-                        print (new_time)
-                        print (node)
-                        # print (constraints)
-                        print ("RIP")
-                        break
+                        continue
                 cost_so_far[node] = new_cost
                 time[node] = new_time
-                prio = new_cost + heuristic(goal + (0,), node)
+                prio = new_cost + heuristic(goal, node[:2])
                 frontier.put(node, prio)
                 came_from[node] = current
-
-                
     if done:
         temp = current
         while (temp in came_from):
             path.append((temp[0],temp[1]))
-            print (temp)
             temp = came_from[temp]
- 
+
     return path[::-1]
 
 
@@ -100,9 +76,9 @@ def neighbours(grid, node):
 
 #calculated an estimated distance to the goal
 def heuristic(goal, node):
-    (x1, y1 , z1) = goal
-    (x2, y2, z2) = node
-    return abs(x1-x2) + abs(y1-y2) #+ abs(z1-z2)
+    (x1, y1) = goal
+    (x2, y2) = node
+    return abs(x1-x2) + abs(y1-y2)
 
 
 def findRoof(constraints):

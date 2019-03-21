@@ -33,20 +33,31 @@ def aStar(grid, start, goal, constraints):
         if (current[0],current[1]) == goal:
             done = True
             break
+        # Add neighbours to priority queue
         temp = (current[0], current[1], current[2]+1)
         for node in neighbours(grid, current) + [temp]: 
             new_cost = cost_so_far[current] + 1
             new_time = time[current] + 1 
             roof = findRoof(constraints)
-            if ((node not in cost_so_far) or new_cost < cost_so_far[node]) and node[2] <= roof: 
-                if (node[0],node[1]) in constraints:
-                    if new_time in constraints[(node[0],node[1])]:
-                        continue
-                cost_so_far[node] = new_cost
-                time[node] = new_time
-                prio = new_cost + heuristic(goal, node[:2])
-                frontier.put(node, prio)
-                came_from[node] = current
+            # If there already is a better path to this neighbour, let it be 
+            if not ((node not in cost_so_far or new_cost < cost_so_far[node]) 
+                    and node[2] <= roof):
+                continue
+            # Dont check neighbours with constraints and dont swap positions
+            if (node[0],node[1]) in constraints:
+                if new_time in constraints[(node[0],node[1])]:
+                    continue
+            # Dont swap positions with neighbours
+            if ((node[0],node[1]) in constraints
+                    and (current[0],current[1]) in constraints):
+                if (cost_so_far[current] in constraints[(node[0], node[1])]
+                        and new_time in constraints[(current[0], current[1])]):
+                    continue
+            cost_so_far[node] = new_cost
+            time[node] = new_time
+            prio = new_cost + heuristic(goal, node[:2])
+            frontier.put(node, prio)
+            came_from[node] = current
     if done:
         temp = current
         while (temp in came_from):

@@ -27,10 +27,15 @@ def aStar(grid, start, goal, constraints):
     path = []
 
     done = False
+    
+    if goal in constraints:
+        min_finish_time = max(constraints[goal])
+    else:
+        min_finish_time = 0
 
     while not frontier.empty():
         current = frontier.get()
-        if (current[0],current[1]) == goal:
+        if (current[0],current[1]) == goal and min_finish_time < cost_so_far[current]:
             done = True
             break
         # Add neighbours to priority queue
@@ -43,10 +48,17 @@ def aStar(grid, start, goal, constraints):
             if not ((node not in cost_so_far or new_cost < cost_so_far[node]) 
                     and node[2] <= roof):
                 continue
-            # Dont check neighbours with constraints and dont swap positions
+            # Dont check neighbours with constraints
             if (node[0],node[1]) in constraints:
-                if new_time in constraints[(node[0],node[1])]:
+                skip = False
+                for t in constraints[(node[0], node[1])]: 
+                    if t < 0 and abs(t) <= new_time:
+                        skip = True
+                    if t == new_time:
+                        skip = True
+                if skip: 
                     continue
+
             # Dont swap positions with neighbours
             if ((node[0],node[1]) in constraints
                     and (current[0],current[1]) in constraints):

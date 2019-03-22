@@ -14,10 +14,9 @@ try:
     parser.add_argument("agents", help="number of agents", type=int)
     parser.set_defaults(size=20, density=10, agents=1)
     args = parser.parse_args()
-    print args
 except:
     e = sys.exc_info()[0]
-    print e
+    print (e)
 
 # Agent configuration
 agent_config = "agents:\n"
@@ -27,7 +26,7 @@ for agent in range(args.agents):
     pos_found = False
     while not pos_found:
         goal = (random.randint(0,args.size-1), random.randint(0,args.size-1))
-        start = (random.randint(0,args.size), random.randint(0,args.size-1))
+        start = (random.randint(0,args.size-1), random.randint(0,args.size-1))
         pos_found = not (start in a_start or goal in a_goals)
     a_goals += [goal]
     a_start += [start]

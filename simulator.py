@@ -3,6 +3,7 @@ import yaml
 import matplotlib
 import argparse
 import operator
+import time
 
 # Plot
 import numpy as np
@@ -20,12 +21,29 @@ from globalPlanner import GlobalPlanner
 
 class Simulator:
     def __init__(self, world):
-        print ("Initialization...")
         self.grid = Grid(world) #[[object, object],[]] NOTE: grid.grid[x][y]        
         self.agents = self.createagents(world)  #[] eller {} ??
+        # Execute global planner and measure time
+        print ("Global planner starting.")
+        print ("")
+        start = time.time()
         planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
+        end = time.time()
         self.schedule = planner.schedule
+        # Evaluate execution 
         print ("Global planner finished executing.")
+        print ("----------------------------------")
+        print ("Planner: %s" % planner.planner)
+        print ("Execution time: %f" % (end-start))
+        print ("Number of agents: %d" % len(self.agents))
+        print ("Size of grid: %dx%d" % (self.grid.width, self.grid.heigth))
+        success_cnt = 0
+        for agent in self.agents:
+            if self.schedule[agent.name]:
+                success_cnt += 1
+        completion = 100*(success_cnt/len(self.agents))
+        print ("Completion rate: %d%%" % completion)
+        print ("----------------------------------")
 
     def createagents(self, world):
         agents = []

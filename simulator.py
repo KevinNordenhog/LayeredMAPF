@@ -43,6 +43,8 @@ class Simulator:
                 success_cnt += 1
         completion = 100*(success_cnt/len(self.agents))
         print ("Completion rate: %d%%" % completion)
+        print ("Makespan: %d" % (len(max(self.schedule.values(), key=lambda
+                schedule: len(schedule)))))
         print ("----------------------------------")
 
     def createagents(self, world):

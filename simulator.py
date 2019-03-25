@@ -30,8 +30,12 @@ class Simulator:
         planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         end = time.time()
         self.schedule = planner.schedule
-        # Evaluate execution 
         print ("Global planner finished executing.")
+        self.evaluate_global(planner, end, start)
+
+
+    def evaluate_global(self, planner, end, start):
+        # Evaluate execution 
         print ("----------------------------------")
         print ("Planner: %s" % planner.planner)
         print ("Execution time: %f" % (end-start))

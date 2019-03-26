@@ -4,6 +4,7 @@ import matplotlib
 import argparse
 import operator
 import time
+import random
 
 # Plot
 import numpy as np
@@ -63,49 +64,70 @@ class Simulator:
     # Start the simulation, plot the grid and update it continously
     def simulate(self):
         self.fig = plt.figure()
-        ax = self.fig.add_subplot(111, aspect='equal')
-        patches = []
+        self.ax = self.fig.add_subplot(111, aspect='equal')
+        self.createfig()
         plt.xlim(0, self.grid.heigth)
         plt.ylim(0, self.grid.width)
-        patches.append(Rectangle(
-            (0, 0), self.grid.heigth, self.grid.width, facecolor='none', edgecolor='red'))       
-        # Show static world (open or obstacle)
-        for row in self.grid.grid:
-            for cell in row:
-                if cell.obstacle:
-                    patches.append(Rectangle(
-                        (cell.x, cell.y), 1, 1, facecolor='red', edgecolor='black'))
-        #Show schedule given by path finding algorithm
-        for agent in self.schedule:
-            for cell in self.schedule[agent]:
-                patches.append(Rectangle(
-                    (cell[0], cell[1]), 1, 1, alpha=0.2, facecolor='blue', edgecolor='black'))
-        
-        self.circles = {}
-        for agent in self.agents:
-            self.circles[agent.name] = Circle(
-                (agent.x+0.5, agent.y+0.5), 0.3, facecolor='orange', edgecolor='black')
-            self.circles[agent.name].facecolor = 'orange'
-
-            patches.append(self.circles[agent.name])
-
-        # Animate and plot
-        for p in patches:
-            ax.add_patch(p)
-        #self.step = 0
+        self.rendercount = 0
         ani = animation.FuncAnimation(self.fig, self.update, interval=50)
         plt.show()
     
     # Run the local planner
     def update(self, *args):
-        #if deviation():
-        #    localplanner()
-        #moveagents()
-        self.updatefig(self, *args)
-        
+        if (self.rendercount % 10) == 0:
+            deviations = self.deviate()
+            if deviations:
+                self.createfig()
+                print (deviations)
+        self.updatefig()
+        self.rendercount += 1
 
-    # Update the figure to show the current grid
-    def updatefig(self, *args):
+    # Randomly spawn blocks at locations where deviations may occur
+    # Input: Location of deviations, probability of deviation
+    # Output: List of deviations [(x,y)]
+    def deviate(self):
+        #deviation_locs = [(4,7)]
+        deviation_locs = []
+        probability = 20
+        deviations = []
+        for (x,y) in deviation_locs:
+            if probability > random.randint(0,100):
+                deviations += [(x,y)]
+                self.grid.grid[x][y].obstacle = True
+        return deviations
+        
+    # Create patches that visualizes the grid
+    def createfig(self):
+        patches = []
+        # Create white background
+        patches.append(Rectangle(
+            (0, 0), self.grid.heigth, self.grid.width, facecolor='none', edgecolor='red'))       
+        # Add obstacles
+        for row in self.grid.grid:
+            for cell in row:
+                if cell.obstacle:
+                    patches.append(Rectangle(
+                        (cell.x, cell.y), 1, 1, facecolor='red', edgecolor='black'))
+        # Add schedule given by path finding algorithm
+        for agent in self.schedule:
+            for cell in self.schedule[agent]:
+                patches.append(Rectangle(
+                    (cell[0], cell[1]), 1, 1, alpha=0.2, facecolor='blue', edgecolor='black'))
+        # Add agents to grid
+        self.circles = {}
+        for agent in self.agents:
+            self.circles[agent.name] = Circle(
+                (agent.x+0.5, agent.y+0.5), 0.3, facecolor='orange', edgecolor='black')
+            self.circles[agent.name].facecolor = 'orange'
+            patches.append(self.circles[agent.name])
+        # Update subplot
+        [p.remove() for p in reversed(self.ax.patches)]
+        for p in patches:
+            self.ax.add_patch(p)
+
+
+    # Update the figure to show moving agents
+    def updatefig(self):
         for agent in self.agents:
             # Color agent according to if goal is reached or unreachable
             if not agent.goal in self.schedule[agent.name]:
@@ -148,6 +170,7 @@ class Simulator:
         # If agent reached next pos, increment it one step
         if (newpos == tuple(map(operator.add, nxt, (0.5,0.5)))):
             agent.pos = nxt
+            agent.x, agent.y = agent.pos[0], agent.pos[1]
             agent.step += 1
         return newpos
 

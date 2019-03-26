@@ -15,8 +15,9 @@ class Grid:
             grid.append([])
             for j in range(0,self.heigth):
                 cell = Cell(i,j)
-                if (i,j) in world["map"]["obstacles"]:
-                    cell.obstacle = True
+                if world["map"]["obstacles"]:
+                    if (i,j) in world["map"]["obstacles"]:
+                        cell.obstacle = True
                 grid[i].append(cell)
         self.grid = grid
 

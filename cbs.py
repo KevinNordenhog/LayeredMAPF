@@ -26,20 +26,17 @@ class cbs_node:
     cost = 0
         
     def __init__(self):
-        #self.constraints = {}
         pass
         
 
 #Conflict based search
 class CBS():
-
-    #constraints = {}
     schedule = {}
     finished = False
 
     def __init__(self, grid, agents):
         self.OPEN = PriorityQueue()
-        #Root node
+        #Root node setup
         root = cbs_node()
         self.low_level(grid, agents, root)       
         self.SIC(root)
@@ -48,7 +45,6 @@ class CBS():
         while not self.OPEN.empty():
             current = self.OPEN.get()
             conflicts = self.validate(current)
-            #print (current.constraints)
             #if goal node
             if self.finished:
                 print ("Cost: %d" % current.cost)
@@ -56,13 +52,11 @@ class CBS():
                 break
             for pos,t in conflicts:
                 for agent in conflicts[pos,t]:
-                    new_node = cbs_node()
-                    
+                    new_node = cbs_node()            
                                         
                     #Set constraints for the new node
-                    new_node.constraints = copy.deepcopy(current.constraints) #could do: dict1 = dict(dict2)
+                    new_node.constraints = copy.deepcopy(current.constraints) #possibly could do: dict1 = dict(dict2)
 
-                    
                     if agent in new_node.constraints:
                         if pos in new_node.constraints[agent]:
                             if t not in new_node.constraints[agent][pos]:
@@ -75,29 +69,17 @@ class CBS():
                     
 
                     #Find solution
-                    self.low_level(grid, agents, new_node)
-                    
+                    self.low_level(grid, agents, new_node)                  
                     valid = True
                     for agent in new_node.solution:
                         if new_node.solution[agent] == []:
                             valid = False
                     
+                    #Only expand nodes containning path for all agents
                     if valid:
-                        #Find cost
+                        #Find cost for the node
                         self.SIC(new_node)
-
-                        self.OPEN.put(new_node, new_node.cost)
-                    
-                    #print ("--------------------")
-                    #print (new_node)
-                    #print (new_node.constraints)
-                    #print (new_node.cost)
-                    #print (new_node.solution)
-                    #print ("--------------------")
-
-
-           
-
+                        self.OPEN.put(new_node, new_node.cost)           
 
     def low_level(self, grid, agents, node):
         paths = {}
@@ -107,7 +89,6 @@ class CBS():
             else:
                 paths[agent.name] = aStar(grid, agent.pos, agent.goal, {})
         node.solution = paths
-
 
     #Sum of individual cost
     def SIC(self, node):
@@ -134,11 +115,12 @@ class CBS():
                         positions[node.solution[agent][i]].append(agent) 
                     else:
                         positions[node.solution[agent][i]] = [agent] 
+                #if the agent is at the goal, we keep checking the goal-position
                 else:
-                    #if the agent is at the goal, we keep checking the goal-position
+                    print (positions)
+                    print (node.solution[agent])
                     if node.solution[agent][-1] in positions:
                         found_conflict = True
-                        #if agent in conflicts[node.solution[agent][-1]]:
                         if (node.solution[agent][-1],i) in conflicts:
                             conflicts[(node.solution[agent][-1],i)].append(agent)
                         else:
@@ -149,7 +131,6 @@ class CBS():
                         positions[node.solution[agent][-1]] = [agent]
 
             if found_conflict:
-                #print (conflicts)
                 return conflicts
         if not found_conflict:
             self.finished = True

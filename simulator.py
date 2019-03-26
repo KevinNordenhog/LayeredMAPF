@@ -77,8 +77,9 @@ class Simulator:
         if (self.rendercount % 10) == 0:
             deviations = self.deviate()
             if deviations:
+                print ("Deviation occured at %s" % deviations)
+                self.localplanner()
                 self.createfig()
-                print (deviations)
         self.updatefig()
         self.rendercount += 1
 
@@ -86,15 +87,24 @@ class Simulator:
     # Input: Location of deviations, probability of deviation
     # Output: List of deviations [(x,y)]
     def deviate(self):
-        #deviation_locs = [(4,7)]
-        deviation_locs = []
+        deviation_locs = [(4,7)]
+        #deviation_locs = []
         probability = 20
         deviations = []
         for (x,y) in deviation_locs:
+            if self.grid.grid[x][y].occupied:
+                continue
             if probability > random.randint(0,100):
                 deviations += [(x,y)]
                 self.grid.grid[x][y].obstacle = True
         return deviations
+
+    def localplanner(self):
+        print ("Local planner executing")
+        planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
+        for agent in self.agents:
+            agent.step = 0
+        self.schedule = planner.schedule
         
     # Create patches that visualizes the grid
     def createfig(self):
@@ -169,8 +179,10 @@ class Simulator:
         newpos = (round(newpos[0],1), round(newpos[1],1))
         # If agent reached next pos, increment it one step
         if (newpos == tuple(map(operator.add, nxt, (0.5,0.5)))):
+            self.grid.grid[agent.x][agent.y].occupied = False
             agent.pos = nxt
             agent.x, agent.y = agent.pos[0], agent.pos[1]
+            self.grid.grid[agent.x][agent.y].occupied = True
             agent.step += 1
         return newpos
 

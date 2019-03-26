@@ -22,12 +22,13 @@ from globalPlanner import GlobalPlanner
 
 class Simulator:
     def __init__(self, world):
-        self.grid = Grid(world) #[[object, object],[]] NOTE: grid.grid[x][y]        
-        self.agents = self.createagents(world)  #[] eller {} ??
+        self.dynamic = True
+        self.grid = Grid(world)        
+        self.agents = self.createagents(world)
         # Execute global planner and measure time
         print ("Global planner executing.")
         start = time.time()
-        self.planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
+        self.planner = GlobalPlanner(self.grid.grid, self.agents)
         end = time.time()
         self.schedule = self.planner.schedule
         self.evaluate_planner(self.planner, end, start)
@@ -92,11 +93,10 @@ class Simulator:
     # Input: Location of deviations, probability of deviation
     # Output: List of deviations [(x,y)]
     def deviate(self):
-        #deviation_locs = [(2,6), (7,9), (0,6)]
-        deviation_locs = []
-        probability = 30
+        if not self.dynamic:
+            return []
         deviations = []
-        for (x,y) in deviation_locs:
+        for (x,y,probability) in self.grid.dynamic_obs:
             if (self.grid.grid[x][y].occupied
                     or self.grid.grid[x][y].obstacle):
                 continue
@@ -108,7 +108,7 @@ class Simulator:
     def localplanner(self):
         for agent in self.agents:
             agent.step = 0
-        planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
+        planner = GlobalPlanner(self.grid.grid, self.agents)
         self.schedule = planner.schedule
         
     # Create patches that visualizes the grid
@@ -144,7 +144,7 @@ class Simulator:
     # Update the figure to show moving agents
     def updatefig(self):
         for agent in self.agents:
-            # Color agent according to if goal is reached or unreachable
+            # Goal unreachable / reached
             if not agent.goal in self.schedule[agent.name]:
                 self.circles[agent.name].facecolor = 'red'
                 continue
@@ -178,7 +178,7 @@ class Simulator:
         if curr == nxt:
             agent.iswaiting = True
             return currentP
-        # Otherwise, update and return new position
+        # Update and return new position
         newpos = tuple(map(operator.add,
                 currentP,(0.1*(nxt[0]-curr[0]),0.1*(nxt[1]-curr[1]))))
         newpos = (round(newpos[0],1), round(newpos[1],1))

@@ -9,17 +9,14 @@ class Cell:
 
 class Grid:
     def __init__(self, world):
-        grid = []
+        self.dynamic_obs = []
         self.width, self.heigth = world["map"]["dimensions"]
-        for i in range(0,self.width):
-            grid.append([])
-            for j in range(0,self.heigth):
-                cell = Cell(i,j)
-                if world["map"]["obstacles"]:
-                    if (i,j) in world["map"]["obstacles"]:
-                        cell.obstacle = True
-                grid[i].append(cell)
-        self.grid = grid
+        self.grid = [[Cell(j,i) for i in range(self.width)] for j in range(self.heigth)]
+        for obs in world["map"]["obstacles"]:
+            self.grid[obs[0]][obs[1]].obstacle = True
+        for dyn in world["map"]["dynamic_obstacles"]:
+            self.dynamic_obs += [dyn]
+
 
 
 

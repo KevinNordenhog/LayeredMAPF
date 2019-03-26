@@ -7,7 +7,7 @@ class GlobalPlanner:
     def __init__(self, grid, agents):
         if len(agents) == 1:
             self.planner = "AStar"
-            self.schedule[agents[0].name] = aStar(grid, agents[0].pos, agents[0].goal, self.constraints)
+            self.schedule[agents[0].name] = aStar(grid, agents[0].pos, agents[0].goal, {})
         else:
             self.planner = "CAstar"
             alg = CAstar(grid, agents)

@@ -1,0 +1,157 @@
+from astar import aStar
+import heapq
+import copy
+
+class PriorityQueue:
+    #used to pick objects with the same priority 
+    #without this heappop tries to compare objects (obj1 < obj2), which does not work
+    i = 0
+    def __init__(self):
+        self.elements = []
+    
+    def empty(self):
+        return len(self.elements) == 0
+    
+    def put(self, item, priority):
+        heapq.heappush(self.elements, (priority, self.i, item))
+        self.i += 1
+    
+    def get(self):
+        #print (self.elements)
+        return heapq.heappop(self.elements)[2]
+
+class cbs_node:
+    constraints = {}
+    solution = {}
+    cost = 0
+        
+    def __init__(self):
+        #self.constraints = {}
+        pass
+        
+
+#Conflict based search
+class CBS():
+
+    #constraints = {}
+    schedule = {}
+    finished = False
+
+    def __init__(self, grid, agents):
+        self.OPEN = PriorityQueue()
+        #Root node
+        root = cbs_node()
+        self.low_level(grid, agents, root)       
+        self.SIC(root)
+        self.OPEN.put(root, root.cost)
+
+        while not self.OPEN.empty():
+            current = self.OPEN.get()
+            conflicts = self.validate(current)
+            #print (current.constraints)
+            #if goal node
+            if self.finished:
+                print ("Cost: %d" % current.cost)
+                self.schedule = current.solution
+                break
+            for pos,t in conflicts:
+                for agent in conflicts[pos,t]:
+                    new_node = cbs_node()
+                    
+                                        
+                    #Set constraints for the new node
+                    new_node.constraints = copy.deepcopy(current.constraints) #could do: dict1 = dict(dict2)
+
+                    
+                    if agent in new_node.constraints:
+                        if pos in new_node.constraints[agent]:
+                            if t not in new_node.constraints[agent][pos]:
+                                new_node.constraints[agent][pos].append(t)
+                        else:
+                            new_node.constraints[agent][pos] = [t]
+                    else:
+                        new_node.constraints[agent] = {}
+                        new_node.constraints[agent][pos] = [t]
+                    
+
+                    #Find solution
+                    self.low_level(grid, agents, new_node)
+                    
+                    valid = True
+                    for agent in new_node.solution:
+                        if new_node.solution[agent] == []:
+                            valid = False
+                    
+                    if valid:
+                        #Find cost
+                        self.SIC(new_node)
+
+                        self.OPEN.put(new_node, new_node.cost)
+                    
+                    #print ("--------------------")
+                    #print (new_node)
+                    #print (new_node.constraints)
+                    #print (new_node.cost)
+                    #print (new_node.solution)
+                    #print ("--------------------")
+
+
+           
+
+
+    def low_level(self, grid, agents, node):
+        paths = {}
+        for agent in agents:
+            if agent.name in node.constraints:
+                paths[agent.name] = aStar(grid, agent.pos, agent.goal, node.constraints[agent.name])
+            else:
+                paths[agent.name] = aStar(grid, agent.pos, agent.goal, {})
+        node.solution = paths
+
+
+    #Sum of individual cost
+    def SIC(self, node):
+        s = 0
+        for agent in node.solution:    
+            s += len(node.solution[agent])
+        node.cost = s
+       
+    def validate(self, node):
+        conflicts = {}
+        found_conflict = False
+        #loops from i=0 to i=length of the longest path
+        for i in range(0, len(node.solution[max(node.solution, key = lambda x: len(node.solution[x]))])):
+            positions = {}
+            for agent in node.solution:
+                if i < len(node.solution[agent]):
+                    if node.solution[agent][i] in positions:
+                        found_conflict = True
+                        if (node.solution[agent][i],i) in conflicts:
+                            conflicts[(node.solution[agent][i],i)].append(agent)
+                        else:
+                            conflicts[(node.solution[agent][i],i)] = [agent] + positions[node.solution[agent][i]]
+                        
+                        positions[node.solution[agent][i]].append(agent) 
+                    else:
+                        positions[node.solution[agent][i]] = [agent] 
+                else:
+                    #if the agent is at the goal, we keep checking the goal-position
+                    if node.solution[agent][-1] in positions:
+                        found_conflict = True
+                        #if agent in conflicts[node.solution[agent][-1]]:
+                        if (node.solution[agent][-1],i) in conflicts:
+                            conflicts[(node.solution[agent][-1],i)].append(agent)
+                        else:
+                            conflicts[(node.solution[agent][-1],i)] = [agent] + positions[node.solution[agent][-1]]
+
+                        positions[node.solution[agent][-1]].append(agent)
+                    else:
+                        positions[node.solution[agent][-1]] = [agent]
+
+            if found_conflict:
+                #print (conflicts)
+                return conflicts
+        if not found_conflict:
+            self.finished = True
+            return {}
+

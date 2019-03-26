@@ -25,17 +25,15 @@ class Simulator:
         self.grid = Grid(world) #[[object, object],[]] NOTE: grid.grid[x][y]        
         self.agents = self.createagents(world)  #[] eller {} ??
         # Execute global planner and measure time
-        print ("Global planner starting.")
-        print ("")
+        print ("Global planner executing.")
         start = time.time()
-        planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
+        self.planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         end = time.time()
-        self.schedule = planner.schedule
-        print ("Global planner finished executing.")
-        self.evaluate_global(planner, end, start)
+        self.schedule = self.planner.schedule
+        self.evaluate_planner(self.planner, end, start)
 
 
-    def evaluate_global(self, planner, end, start):
+    def evaluate_planner(self, planner, end, start):
         # Evaluate execution 
         print ("----------------------------------")
         print ("Planner: %s" % planner.planner)
@@ -69,6 +67,7 @@ class Simulator:
         plt.xlim(0, self.grid.heigth)
         plt.ylim(0, self.grid.width)
         self.rendercount = 0
+        self.stepcount = 0
         ani = animation.FuncAnimation(self.fig, self.update, interval=50)
         plt.show()
     
@@ -77,9 +76,15 @@ class Simulator:
         if (self.rendercount % 10) == 0:
             deviations = self.deviate()
             if deviations:
-                print ("Deviation occured at %s" % deviations)
+                print ("")
+                print ("Deviation occured on time %s at %s." % (self.stepcount,deviations))
+                print ("Local planner executing")
+                start = time.time()
                 self.localplanner()
+                end = time.time()
+                self.evaluate_planner(self.planner, end, start)
                 self.createfig()
+            self.stepcount += 1
         self.updatefig()
         self.rendercount += 1
 
@@ -87,12 +92,13 @@ class Simulator:
     # Input: Location of deviations, probability of deviation
     # Output: List of deviations [(x,y)]
     def deviate(self):
-        deviation_locs = [(4,7)]
-        #deviation_locs = []
-        probability = 20
+        #deviation_locs = [(2,6), (7,9), (0,6)]
+        deviation_locs = []
+        probability = 30
         deviations = []
         for (x,y) in deviation_locs:
-            if self.grid.grid[x][y].occupied:
+            if (self.grid.grid[x][y].occupied
+                    or self.grid.grid[x][y].obstacle):
                 continue
             if probability > random.randint(0,100):
                 deviations += [(x,y)]
@@ -100,10 +106,9 @@ class Simulator:
         return deviations
 
     def localplanner(self):
-        print ("Local planner executing")
-        planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         for agent in self.agents:
             agent.step = 0
+        planner = GlobalPlanner(self.grid.grid, self.agents)  # dict (agent:  [path])
         self.schedule = planner.schedule
         
     # Create patches that visualizes the grid

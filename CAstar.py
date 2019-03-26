@@ -7,6 +7,7 @@ class CAstar():
     schedule = {}
 
     def __init__(self, grid, agents):
+        self.constraints = {}
         for agent in agents:
             self.schedule[agent.name] = aStar(grid, agent.pos, agent.goal, self.constraints)
             i = 0

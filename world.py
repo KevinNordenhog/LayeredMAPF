@@ -12,10 +12,12 @@ class Grid:
         self.dynamic_obs = []
         self.width, self.heigth = world["map"]["dimensions"]
         self.grid = [[Cell(j,i) for i in range(self.width)] for j in range(self.heigth)]
-        for obs in world["map"]["obstacles"]:
-            self.grid[obs[0]][obs[1]].obstacle = True
-        for dyn in world["map"]["dynamic_obstacles"]:
-            self.dynamic_obs += [dyn]
+        if world["map"]["obstacles"]:
+            for obs in world["map"]["obstacles"]:
+                self.grid[obs[0]][obs[1]].obstacle = True
+        if world["map"]["dynamic_obstacles"]:
+            for dyn in world["map"]["dynamic_obstacles"]:
+                self.dynamic_obs += [dyn]
 
 
 

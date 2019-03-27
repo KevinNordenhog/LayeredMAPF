@@ -62,11 +62,9 @@ def create_config(agents, size, density, dynamic_density, probability):
 #########################
 # Output map to file
 #########################
-def save_map(config, size, agents, density):
-    name = "maps/map_s%d_a%d_d%d.yaml" % (size, agents, density)
+def save_map(config, name):
     f = open(name, "w")
     f.write(config)
-    return name
 
 #########################
 # Generate map based on input and save to maps/ folder
@@ -100,4 +98,5 @@ if __name__ == "__main__":
         print (e)
     config = gen_map(args.size, args.density, args.agents, 
             args.dynamic_density, args.probability)
-    save_map(config, args.size, args.agents, args.density)
+    name = "maps/map_s%d_a%d_d%d.yaml" % (args.size, args.agents, args.density)
+    save_map(config, name)

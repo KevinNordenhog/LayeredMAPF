@@ -9,8 +9,10 @@ if __name__ == "__main__":
     dynamic_density = 10
     dynamic_probability = 10
     global_planner = "cbs"
-    world = yaml.load(generatemap.gen_map(size, density, agents,
-            dynamic_density, dynamic_probability))
+    map_config = generatemap.gen_map(size, density, agents,
+            dynamic_density, dynamic_probability)
+    generatemap.save_map(map_config, "maps/test_map.yaml")
+    world = yaml.load(map_config)
     sim = simulator.Simulator(world, global_planner)
-    sim.dynamic = True
+    sim.dynamic = False
     sim.simulate()

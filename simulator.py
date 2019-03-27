@@ -22,7 +22,10 @@ from globalPlanner import GlobalPlanner
 
 class Simulator:
     def __init__(self, world, alg):
-        self.dynamic = True
+        if world["map"]["dynamic_obstacles"]:
+            self.dynamic = True
+        else:
+            self.dynamic = False
         self.grid = Grid(world)        
         self.agents = self.createagents(world)
         self.alg = alg

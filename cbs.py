@@ -27,7 +27,15 @@ class cbs_node:
         
     def __init__(self):
         pass
-        
+    
+    #for suboptimal cbs
+    def get_size(self):
+        size = 0
+        for agent in self.constraints:
+            for pos in self.constraints[agent]:
+                size += len(self.constraints[agent][pos])
+        return size
+            
 
 #Conflict based search
 class CBS():
@@ -44,6 +52,8 @@ class CBS():
 
         while not self.OPEN.empty():
             current = self.OPEN.get()
+            print (current.constraints)
+            print (current.cost)
             conflicts = self.validate(current)
             #if goal node
             if self.finished:
@@ -55,7 +65,7 @@ class CBS():
                     new_node = cbs_node()            
                                         
                     #Set constraints for the new node
-                    new_node.constraints = copy.deepcopy(current.constraints) #possibly could do: dict1 = dict(dict2)
+                    new_node.constraints = copy.deepcopy(current.constraints) #dict1 = dict(dict2)
 
                     if agent in new_node.constraints:
                         if pos in new_node.constraints[agent]:
@@ -114,11 +124,33 @@ class CBS():
                         
                         positions[node.solution[agent][i]].append(agent) 
                     else:
-                        positions[node.solution[agent][i]] = [agent] 
+                        positions[node.solution[agent][i]] = [agent]
+                    #full frontal collisions
+                    #If an agents previous position is visited by another and vise versa
+                    if node.solution[agent][i-1] in positions:
+                        for a in positions[node.solution[agent][i-1]]:
+                            if (node.solution[a][i-1] == node.solution[agent][i]) and not (agent == a):
+                                found_conflict = True
+
+                                #Agent1
+                                if (node.solution[agent][i],i) in conflicts:
+                                    if agent not in conflicts[(node.solution[agent][i],i)]:
+                                        conflicts[(node.solution[agent][i],i)].append(agent)
+                                else:
+                                    conflicts[(node.solution[agent][i],i)] = [agent] + positions[node.solution[agent][i]]
+
+                                #Agent2
+                                if (node.solution[a][i],i) in conflicts: 
+                                    if a not in conflicts[(node.solution[a][i],i)]:
+                                        conflicts[(node.solution[a][i],i)].append(a)
+                                else:
+                                    conflicts[(node.solution[a][i],i)] = [a] + positions[node.solution[a][i]]
+
+
                 #if the agent is at the goal, we keep checking the goal-position
                 else:
-                    print (positions)
-                    print (node.solution[agent])
+                    #print (positions)
+                    #print (node.solution[agent])
                     if node.solution[agent][-1] in positions:
                         found_conflict = True
                         if (node.solution[agent][-1],i) in conflicts:

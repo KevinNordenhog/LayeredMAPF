@@ -52,8 +52,8 @@ class CBS():
 
         while not self.OPEN.empty():
             current = self.OPEN.get()
-            print (current.constraints)
-            print (current.cost)
+            #print (current.constraints)
+            #print (current.cost)
             conflicts = self.validate(current)
             #if goal node
             if self.finished:
@@ -149,8 +149,6 @@ class CBS():
 
                 #if the agent is at the goal, we keep checking the goal-position
                 else:
-                    #print (positions)
-                    #print (node.solution[agent])
                     if node.solution[agent][-1] in positions:
                         found_conflict = True
                         if (node.solution[agent][-1],i) in conflicts:

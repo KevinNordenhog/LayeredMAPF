@@ -16,8 +16,6 @@ class PriorityQueue:
 
 # [objects], (x,y), (x,y), {(x,y): [t1,t2,t3]}
 def aStar(grid, start, goal, constraints):
-    if start == goal and goal not in constraints:
-        return [goal]
     frontier = PriorityQueue()
     frontier.put(start + (0,), 0)
     came_from = {}
@@ -37,7 +35,8 @@ def aStar(grid, start, goal, constraints):
 
     while not frontier.empty():
         current = frontier.get()
-        if (current[0],current[1]) == goal and min_finish_time < cost_so_far[current]:
+        if ((current[0],current[1]) == goal and cost_so_far != 0
+                and min_finish_time < cost_so_far[current]):
             done = True
             break
         # Add neighbours to priority queue

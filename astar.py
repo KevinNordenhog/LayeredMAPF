@@ -29,7 +29,7 @@ def aStar(grid, start, goal, constraints):
     done = False
     
     if goal in constraints:
-        min_finish_time = max(constraints[goal])
+        min_finish_time = max(constraints[goal])[0]
     else:
         min_finish_time = 0
 
@@ -53,9 +53,9 @@ def aStar(grid, start, goal, constraints):
             if (node[0],node[1]) in constraints:
                 skip = False
                 for t in constraints[(node[0], node[1])]: 
-                    if t < 0 and abs(t) <= new_time:
+                    if t[0] < 0 and abs(t[0]) <= new_time:
                         skip = True
-                    if t == new_time:
+                    if t[0] == new_time:
                         skip = True
                 if skip: 
                     continue
@@ -63,9 +63,18 @@ def aStar(grid, start, goal, constraints):
             # Dont swap positions with neighbours
             if ((node[0],node[1]) in constraints
                     and (current[0],current[1]) in constraints):
-                if (cost_so_far[current] in constraints[(node[0], node[1])]
-                        and new_time in constraints[(current[0], current[1])]):
+                node_history = constraints[(node[0],node[1])]
+                current_history = constraints[(current[0], current[1])]
+                agent_node, agent_current = "node", "current"
+                for (t, agent) in node_history:
+                    if time[current] == t:
+                       agent_node = agent
+                for (t, agent) in current_history:
+                    if new_time == t:
+                        agent_current = agent
+                if agent_node == agent_current:
                     continue
+
             cost_so_far[node] = new_cost
             time[node] = new_time
             prio = new_cost + heuristic(goal, node[:2])
@@ -109,6 +118,6 @@ def findRoof(constraints):
     roof = 1
 
     for i in constraints.values():
-        if max(i) > roof:
-            roof = max(i)
+        if max(i)[0] > roof:
+            roof = max(i)[0]
     return roof

@@ -21,14 +21,15 @@ from globalPlanner import GlobalPlanner
 
 
 class Simulator:
-    def __init__(self, world):
+    def __init__(self, world, alg):
         self.dynamic = True
         self.grid = Grid(world)        
         self.agents = self.createagents(world)
+        self.alg = alg
         # Execute global planner and measure time
         print ("Global planner executing.")
         start = time.time()
-        self.planner = GlobalPlanner(self.grid.grid, self.agents)
+        self.planner = GlobalPlanner(self.grid.grid, self.agents, self.alg)
         end = time.time()
         self.schedule = self.planner.schedule
         self.evaluate_planner(self.planner, end, start)
@@ -108,7 +109,7 @@ class Simulator:
     def localplanner(self):
         for agent in self.agents:
             agent.step = 0
-        planner = GlobalPlanner(self.grid.grid, self.agents)
+        planner = GlobalPlanner(self.grid.grid, self.agents, self.alg)
         self.schedule = planner.schedule
         
     # Create patches that visualizes the grid
@@ -194,11 +195,12 @@ class Simulator:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("map", help="input file containing map")
+    parser.add_argument("alg", help="algorithmss: cbs, castar")
     args = parser.parse_args()
 
 
     with open(args.map) as map_file:
         world = yaml.load(map_file)
-
-    simulator = Simulator(world)
+    
+    simulator = Simulator(world, args.alg)
     simulator.simulate()

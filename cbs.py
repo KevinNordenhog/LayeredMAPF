@@ -61,21 +61,33 @@ class CBS():
                 self.schedule = current.solution
                 break
             for pos,t in conflicts:
-                for agent in conflicts[pos,t]:
+                for agent in conflicts[pos,t][0]:
                     new_node = cbs_node()            
                                         
                     #Set constraints for the new node
                     new_node.constraints = copy.deepcopy(current.constraints) #dict1 = dict(dict2)
-
-                    if agent in new_node.constraints:
-                        if pos in new_node.constraints[agent]:
-                            if t not in new_node.constraints[agent][pos]:
-                                new_node.constraints[agent][pos].append(t)
+                    if conflicts[pos,t][1] == []:
+                        if agent in new_node.constraints:
+                            if pos in new_node.constraints[agent]:
+                                if t not in new_node.constraints[agent][pos]:
+                                    new_node.constraints[agent][pos].append((t,""))
+                            else:
+                                new_node.constraints[agent][pos] = [(t,"")]
                         else:
-                            new_node.constraints[agent][pos] = [t]
+                            new_node.constraints[agent] = {}
+                            new_node.constraints[agent][pos] = [(t,"")]
                     else:
-                        new_node.constraints[agent] = {}
-                        new_node.constraints[agent][pos] = [t]
+                        for a in conflicts[pos,t][1]:
+                            if agent in new_node.constraints:
+                                if pos in new_node.constraints[agent]:
+                                    if t not in new_node.constraints[agent][pos]:
+                                        new_node.constraints[agent][pos].append((t,a))
+                                else:
+                                    new_node.constraints[agent][pos] = [(t,a)]
+                            else:
+                                new_node.constraints[agent] = {}
+                                new_node.constraints[agent][pos] = [(t,a)]
+
                     
 
                     #Find solution
@@ -118,10 +130,11 @@ class CBS():
                     if node.solution[agent][i] in positions:
                         found_conflict = True
                         if (node.solution[agent][i],i) in conflicts:
-                            conflicts[(node.solution[agent][i],i)].append(agent)
+                            conflicts[(node.solution[agent][i],i)][0].append(agent)
+                            #conflicts[(node.solution[agent][i],i)][1].append(agent)
                         else:
-                            conflicts[(node.solution[agent][i],i)] = [agent] + positions[node.solution[agent][i]]
-                        
+                            #conflicts[(node.solution[agent][i],i)] = ([agent] + positions[node.solution[agent][i]],[agent] + positions[node.solution[agent][i]])
+                            conflicts[(node.solution[agent][i],i)] = ([agent] + positions[node.solution[agent][i]],[])
                         positions[node.solution[agent][i]].append(agent) 
                     else:
                         positions[node.solution[agent][i]] = [agent]
@@ -135,16 +148,21 @@ class CBS():
                                 #Agent1
                                 if (node.solution[agent][i],i) in conflicts:
                                     if agent not in conflicts[(node.solution[agent][i],i)]:
-                                        conflicts[(node.solution[agent][i],i)].append(agent)
+                                        conflicts[(node.solution[agent][i],i)][0].append(agent)
+                                        conflicts[(node.solution[agent][i],i)][1].append(a)
                                 else:
-                                    conflicts[(node.solution[agent][i],i)] = [agent] + positions[node.solution[agent][i]]
+                                    #conflicts[(node.solution[agent][i],i)] = ([agent] + positions[node.solution[agent][i]],[a] + positions[node.solution[agent][i]])
+                                    conflicts[(node.solution[agent][i],i)] = ([agent] + positions[node.solution[agent][i]],[a])
 
                                 #Agent2
                                 if (node.solution[a][i],i) in conflicts: 
                                     if a not in conflicts[(node.solution[a][i],i)]:
-                                        conflicts[(node.solution[a][i],i)].append(a)
+                                        conflicts[(node.solution[a][i],i)][0].append(a)
+                                        conflicts[(node.solution[a][i],i)][1].append(agent)
+
                                 else:
-                                    conflicts[(node.solution[a][i],i)] = [a] + positions[node.solution[a][i]]
+                                    #conflicts[(node.solution[a][i],i)] = ([a] + positions[node.solution[a][i]],[agent] + positions[node.solution[a][i]])
+                                    conflicts[(node.solution[a][i],i)] = ([a] + positions[node.solution[a][i]],[agent])
 
 
                 #if the agent is at the goal, we keep checking the goal-position
@@ -152,9 +170,14 @@ class CBS():
                     if node.solution[agent][-1] in positions:
                         found_conflict = True
                         if (node.solution[agent][-1],i) in conflicts:
-                            conflicts[(node.solution[agent][-1],i)].append(agent)
+                            #conflicts[(node.solution[agent][-1],i)].append(agent)
+                            conflicts[(node.solution[agent][-1],i)][0].append(agent)
+                            conflicts[(node.solution[agent][-1],i)][1].append(agent)
+
                         else:
-                            conflicts[(node.solution[agent][-1],i)] = [agent] + positions[node.solution[agent][-1]]
+                            #conflicts[(node.solution[agent][-1],i)] = [agent] + positions[node.solution[agent][-1]]
+                            conflicts[(node.solution[agent][-1],i)] = ([agent] + positions[node.solution[agent][-1]],[agent] + positions[node.solution[agent][-1]])
+
 
                         positions[node.solution[agent][-1]].append(agent)
                     else:

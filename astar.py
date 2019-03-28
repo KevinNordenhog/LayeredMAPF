@@ -67,12 +67,12 @@ def aStar(grid, start, goal, constraints):
                 current_history = constraints[(current[0], current[1])]
                 agent_node, agent_current = "node", "current"
                 for (t, agent) in node_history:
-                    if time[current] == t:
+                    if time[current] == abs(t) and not agent == "":
                        agent_node = agent
                 for (t, agent) in current_history:
-                    if new_time == t:
+                    if new_time == abs(t) and not agent == "":
                         agent_current = agent
-                if agent_node == agent_current:
+                if agent_node == agent_current and not agent_node == "":
                     continue
 
             cost_so_far[node] = new_cost

@@ -9,6 +9,7 @@ if __name__ == "__main__":
     dynamic_density = 20
     dynamic_probability = 10
     global_planner = "cbs"
+
     map_config = generatemap.gen_map(size, density, agents,
             dynamic_density, dynamic_probability)
     generatemap.save_map(map_config, "maps/test_map.yaml")

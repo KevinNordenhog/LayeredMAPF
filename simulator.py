@@ -22,6 +22,7 @@ from globalPlanner import GlobalPlanner
 
 class Simulator:
     def __init__(self, world, alg):
+        self.delays = True
         if world["map"]["dynamic_obstacles"]:
             self.dynamic = True
         else:
@@ -93,20 +94,25 @@ class Simulator:
         self.updatefig()
         self.rendercount += 1
 
-    # Randomly spawn blocks at locations where deviations may occur
-    # Input: Location of deviations, probability of deviation
-    # Output: List of deviations [(x,y)]
+    # Create deviations if dynamic blocks or delays are turned on
     def deviate(self):
-        if not self.dynamic:
-            return []
         deviations = []
-        for (x,y,probability) in self.grid.dynamic_obs:
-            if (self.grid.grid[x][y].occupied
-                    or self.grid.grid[x][y].obstacle):
-                continue
-            if probability > random.randint(0,100):
-                deviations += [(x,y)]
-                self.grid.grid[x][y].obstacle = True
+        # Spawn dynamic blocks based their probability
+        if self.dynamic:
+            for (x,y,probability) in self.grid.dynamic_obs:
+                if (self.grid.grid[x][y].occupied
+                        or self.grid.grid[x][y].obstacle):
+                    continue
+                if probability > random.randint(0,100):
+                    deviations += [(x,y)]
+                    self.grid.grid[x][y].obstacle = True
+        # Delay agents based on delay probability
+        if self.delays:
+            for agent in self.agents:
+                if random.randint(0,100) < 5:
+                    pass
+                    # deviations += [agent.name]
+                    # How should we create deviations here?
         return deviations
 
     def localplanner(self):

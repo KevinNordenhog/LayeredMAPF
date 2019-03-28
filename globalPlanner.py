@@ -1,6 +1,7 @@
 from astar import aStar
 from CAstar import CAstar
 from cbs import CBS
+from ecbs import ECBS
 
 class GlobalPlanner:
     schedule = {}
@@ -16,5 +17,8 @@ class GlobalPlanner:
             elif alg=="cbs":
                 self.planner = "CBS"
                 alg = CBS(grid, agents)
+            elif alg=="ecbs":
+                self.planner = "ECBS"
+                alg = ECBS(grid, agents)
             self.schedule = alg.schedule
         #print (self.schedule)

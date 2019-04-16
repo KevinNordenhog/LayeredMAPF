@@ -1,6 +1,7 @@
 class Agent:
      def __init__(self, name, goal, pos):
         self.name = name
+        self.start = pos
         self.goal = goal
         self.pos = pos
         self.x = pos[0]

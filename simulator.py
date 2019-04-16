@@ -77,18 +77,19 @@ class Simulator:
         ani = animation.FuncAnimation(self.fig, self.update, interval=50)
         plt.show()
     
-    # Run the local planner
+    # Create deviations and run local planner if necessary,
+    # then move agents and update figure
     def update(self, *args):
         if (self.rendercount % 10) == 0:
             deviations = self.deviate()
             if deviations:
                 print ("")
                 print ("Deviation occured on time %s at %s." % (self.stepcount,deviations))
-                print ("Local planner executing")
-                start = time.time()
-                self.localplanner()
-                end = time.time()
-                self.evaluate_planner(self.planner, end, start)
+                #print ("Local planner executing")
+                #start = time.time()
+                #self.localplanner()
+                #end = time.time()
+                #self.evaluate_planner(self.planner, end, start)
                 self.createfig()
             self.stepcount += 1
         self.updatefig()
@@ -109,15 +110,12 @@ class Simulator:
         # Delay agents based on delay probability
         if self.delays:
             for agent in self.agents:
-                if random.randint(0,100) < 5:
-                    pass
-                    # deviations += [agent.name]
-                    # How should we create deviations here?
+                if random.randint(0,100) < 10:
+                    deviations += [agent.name]
+                    self.schedule[agent.name].insert(0, agent.pos)
         return deviations
 
     def localplanner(self):
-        for agent in self.agents:
-            agent.step = 0
         planner = GlobalPlanner(self.grid.grid, self.agents, self.alg)
         self.schedule = planner.schedule
         
@@ -155,12 +153,13 @@ class Simulator:
     def updatefig(self):
         for agent in self.agents:
             # Goal unreachable / reached
+            if (agent.pos == agent.goal and
+                    not self.schedule[agent.name]):
+                self.circles[agent.name].facecolor = 'lightgreen'
+                continue
             if not agent.goal in self.schedule[agent.name]:
                 self.circles[agent.name].facecolor = 'red'
                 continue
-            if (agent.pos == agent.goal and
-                    agent.step == len(self.schedule[agent.name])-1):
-                self.circles[agent.name].facecolor = 'lightgreen'
             # Update position
             pos = self.updatePos(agent) 
             self.circles[agent.name].center = pos
@@ -174,10 +173,8 @@ class Simulator:
     def updatePos(self, agent):
         currentP = self.circles[agent.name].center # the circles position
         if (agent.pos == agent.goal and 
-                agent.step == len(self.schedule[agent.name])-1):
+                not self.schedule[agent.name]):
             return currentP
-        curr = self.schedule[agent.name][agent.step]
-        nxt = self.schedule[agent.name][agent.step+1]
         # Handle wait
         agent.rendercount += 1
         if agent.iswaiting:
@@ -185,8 +182,11 @@ class Simulator:
             if not agent.iswaiting:
                 agent.step += 1
             return currentP
+        curr = agent.pos
+        nxt = self.schedule[agent.name][0]
         if curr == nxt:
             agent.iswaiting = True
+            self.schedule[agent.name].pop(0)
             return currentP
         # Update and return new position
         newpos = tuple(map(operator.add,
@@ -199,6 +199,7 @@ class Simulator:
             agent.x, agent.y = agent.pos[0], agent.pos[1]
             self.grid.grid[agent.x][agent.y].occupied = True
             agent.step += 1
+            self.schedule[agent.name].pop(0)
         return newpos
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ import argparse
 import operator
 import time
 import random
+import post
 
 # Plot
 import numpy as np
@@ -28,12 +29,12 @@ class Simulator:
         else:
             self.dynamic = False
         self.grid = Grid(world)        
-        self.agents = self.createagents(world)
+        (self.agents, self.agent_array) = self.createagents(world)
         self.alg = alg
         # Execute global planner and measure time
         print ("Global planner executing.")
         start = time.time()
-        self.planner = GlobalPlanner(self.grid.grid, self.agents, self.alg)
+        self.planner = GlobalPlanner(self.grid.grid, self.agent_array, self.alg)
         end = time.time()
         self.schedule = self.planner.schedule
         self.evaluate_planner(self.planner, end, start)
@@ -48,22 +49,26 @@ class Simulator:
         print ("Size of grid: %dx%d" % (self.grid.width, self.grid.heigth))
         success_cnt = 0
         for agent in self.agents:
-            if self.schedule[agent.name]:
+            if self.schedule[agent]:
                 success_cnt += 1
         completion = 100*(success_cnt/len(self.agents))
         print ("Completion rate: %d%%" % completion)
         print ("Makespan: %d" % (len(max(self.schedule.values(), key=lambda
                 schedule: len(schedule)))))
+        print ("Delay tolerance: %d" % (post.post(planner.schedule)))
         print ("----------------------------------")
 
     def createagents(self, world):
-        agents = []
+        agents = {}
+        agent_array = []
         for agent in world["agents"]:
             name = agent["name"]
             goal = (agent["goal"][0],agent["goal"][1])
             start = (agent["start"][0],agent["start"][1])
-            agents.append(Agent(name, goal, start))
-        return agents
+            new_agent = Agent(name, goal, start)
+            agents[name] = new_agent
+            agent_array.append(new_agent)
+        return (agents, agent_array)
 
     # Start the simulation, plot the grid and update it continously
     def simulate(self):
@@ -85,11 +90,7 @@ class Simulator:
             if deviations:
                 print ("")
                 print ("Deviation occured on time %s at %s." % (self.stepcount,deviations))
-                #print ("Local planner executing")
-                #start = time.time()
-                #self.localplanner()
-                #end = time.time()
-                #self.evaluate_planner(self.planner, end, start)
+                self.localplanner(deviations)
                 self.createfig()
             self.stepcount += 1
         self.updatefig()
@@ -109,15 +110,28 @@ class Simulator:
                     self.grid.grid[x][y].obstacle = True
         # Delay agents based on delay probability
         if self.delays:
-            for agent in self.agents:
+            for agent in self.agents.values():
                 if random.randint(0,100) < 10:
                     deviations += [agent.name]
                     self.schedule[agent.name].insert(0, agent.pos)
+                    agent.delay += 1
         return deviations
 
-    def localplanner(self):
-        planner = GlobalPlanner(self.grid.grid, self.agents, self.alg)
-        self.schedule = planner.schedule
+    def localplanner(self, deviations):
+        print ("Local planner executing")
+        start = time.time()
+        recompute = False
+        for agent in deviations:
+            if self.agents[agent].delay > self.planner.delay_tolerance:
+                print ("Local planner recomputing path due to %s:" % agent)
+                self.planner = GlobalPlanner(self.grid.grid, self.agent_array, self.alg)
+                self.schedule = self.planner.schedule
+                end = time.time()
+                self.evaluate_planner(self.planner, end, start)
+                recompute = True
+                break
+        if not recompute:
+            print ("The delay can be tolerated. Recalculation not needed")
         
     # Create patches that visualizes the grid
     def createfig(self):
@@ -138,7 +152,7 @@ class Simulator:
                     (cell[0], cell[1]), 1, 1, alpha=0.2, facecolor='blue', edgecolor='black'))
         # Add agents to grid
         self.circles = {}
-        for agent in self.agents:
+        for agent in self.agents.values():
             self.circles[agent.name] = Circle(
                 (agent.x+0.5, agent.y+0.5), 0.3, facecolor='orange', edgecolor='black')
             self.circles[agent.name].facecolor = 'orange'
@@ -151,7 +165,7 @@ class Simulator:
 
     # Update the figure to show moving agents
     def updatefig(self):
-        for agent in self.agents:
+        for agent in self.agents.values():
             # Goal unreachable / reached
             if (agent.pos == agent.goal and
                     not self.schedule[agent.name]):
@@ -164,7 +178,7 @@ class Simulator:
             pos = self.updatePos(agent) 
             self.circles[agent.name].center = pos
         # Updates the circles according to new positions and colors
-        for agent in self.agents:
+        for agent in self.agents.values():
             self.circles[agent.name].set_facecolor(self.circles[agent.name].facecolor)
     
 
@@ -205,7 +219,7 @@ class Simulator:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("map", help="input file containing map")
-    parser.add_argument("alg", help="algorithmss: cbs, castar")
+    parser.add_argument("alg", help="algorithms: cbs, castar")
     args = parser.parse_args()
 
 

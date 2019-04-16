@@ -1,3 +1,5 @@
+import sys
+
 def post(schedule):
     windows = []
     count = {}
@@ -17,6 +19,7 @@ def post(schedule):
         for pos in count:
             if not pos in stops:
                 count[pos][1] += 1
-
-    print (min(windows))
-    return min(windows)
+    if windows:
+        return min(windows)
+    else:
+        return sys.maxsize

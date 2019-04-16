@@ -10,3 +10,4 @@ class Agent:
         # Used for rendering in simulator
         self.rendercount = 0
         self.iswaiting = False
+        self.delay = 0

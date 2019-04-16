@@ -3,10 +3,12 @@ from CAstar import CAstar
 from cbs import CBS
 from ecbs import ECBS
 from post import post
+import sys
 
 class GlobalPlanner:
     schedule = {}
     planner = "Planner not chosen"
+    delay_tolerance = sys.maxsize
     def __init__(self, grid, agents, alg):
         if len(agents) == 1:
             self.planner = "AStar"
@@ -22,6 +24,4 @@ class GlobalPlanner:
                 self.planner = "ECBS"
                 alg = ECBS(grid, agents)
             self.schedule = alg.schedule
-            self.window = post(self.schedule)
-            print (self.window)
-        #print (self.schedule)
+            self.delay_tolerance = post(self.schedule)

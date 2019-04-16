@@ -57,7 +57,6 @@ class CBS():
             conflicts = self.validate(current)
             #if goal node
             if self.finished:
-                print ("Cost: %d" % current.cost)
                 self.schedule = current.solution
                 break
             for pos,t in conflicts:

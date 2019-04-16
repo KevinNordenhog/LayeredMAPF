@@ -2,6 +2,7 @@ from astar import aStar
 from CAstar import CAstar
 from cbs import CBS
 from ecbs import ECBS
+from post import post
 
 class GlobalPlanner:
     schedule = {}
@@ -21,4 +22,6 @@ class GlobalPlanner:
                 self.planner = "ECBS"
                 alg = ECBS(grid, agents)
             self.schedule = alg.schedule
+            self.window = post(self.schedule)
+            print (self.window)
         #print (self.schedule)

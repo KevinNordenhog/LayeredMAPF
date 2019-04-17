@@ -5,7 +5,6 @@ import argparse
 import operator
 import time
 import random
-import post
 
 # Plot
 import numpy as np
@@ -18,7 +17,7 @@ from matplotlib.patches import Circle, Rectangle, Arrow
 
 from agent import Agent
 from world import Grid, Cell
-from globalPlanner import GlobalPlanner
+from planner import Planner
 
 
 class Simulator:
@@ -29,46 +28,24 @@ class Simulator:
         else:
             self.dynamic = False
         self.grid = Grid(world)        
-        (self.agents, self.agent_array) = self.createagents(world)
-        self.alg = alg
-        # Execute global planner and measure time
+        self.agents = self.createagents(world)
+        # Execute global planner, measure time, and print data
         print ("Global planner executing.")
         start = time.time()
-        self.planner = GlobalPlanner(self.grid.grid, self.agent_array, self.alg)
-        end = time.time()
+        self.planner = Planner(self.grid, self.agents, alg)
         self.schedule = self.planner.schedule
-        self.evaluate_planner(self.planner, end, start)
+        end = time.time()
+        self.planner.evaluate(start, end, self.grid, self.agents)
 
-
-    def evaluate_planner(self, planner, end, start):
-        # Evaluate execution 
-        print ("----------------------------------")
-        print ("Planner: %s" % planner.planner)
-        print ("Execution time: %f" % (end-start))
-        print ("Number of agents: %d" % len(self.agents))
-        print ("Size of grid: %dx%d" % (self.grid.width, self.grid.heigth))
-        success_cnt = 0
-        for agent in self.agents:
-            if self.schedule[agent]:
-                success_cnt += 1
-        completion = 100*(success_cnt/len(self.agents))
-        print ("Completion rate: %d%%" % completion)
-        print ("Makespan: %d" % (len(max(self.schedule.values(), key=lambda
-                schedule: len(schedule)))))
-        print ("Delay tolerance: %d" % (post.post(planner.schedule)))
-        print ("----------------------------------")
-
+    # Create a dictonary containing all agents
     def createagents(self, world):
         agents = {}
-        agent_array = []
         for agent in world["agents"]:
             name = agent["name"]
             goal = (agent["goal"][0],agent["goal"][1])
             start = (agent["start"][0],agent["start"][1])
-            new_agent = Agent(name, goal, start)
-            agents[name] = new_agent
-            agent_array.append(new_agent)
-        return (agents, agent_array)
+            agents[name] = Agent(name, goal, start)
+        return agents
 
     # Start the simulation, plot the grid and update it continously
     def simulate(self):
@@ -90,7 +67,7 @@ class Simulator:
             if deviations:
                 print ("")
                 print ("Deviation occured on time %s at %s." % (self.stepcount,deviations))
-                self.localplanner(deviations)
+                self.planner.localplanner(deviations, self.grid, self.agents)
                 self.createfig()
             self.stepcount += 1
         self.updatefig()
@@ -117,22 +94,6 @@ class Simulator:
                     agent.delay += 1
         return deviations
 
-    def localplanner(self, deviations):
-        print ("Local planner executing")
-        start = time.time()
-        recompute = False
-        for agent in deviations:
-            if self.agents[agent].delay > self.planner.delay_tolerance:
-                print ("Local planner recomputing path due to %s:" % agent)
-                self.planner = GlobalPlanner(self.grid.grid, self.agent_array, self.alg)
-                self.schedule = self.planner.schedule
-                end = time.time()
-                self.evaluate_planner(self.planner, end, start)
-                recompute = True
-                break
-        if not recompute:
-            print ("The delay can be tolerated. Recalculation not needed")
-        
     # Create patches that visualizes the grid
     def createfig(self):
         patches = []

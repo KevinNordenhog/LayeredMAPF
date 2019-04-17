@@ -5,6 +5,7 @@ import argparse
 import operator
 import time
 import random
+import sys
 
 # Plot
 import numpy as np
@@ -45,7 +46,8 @@ class Simulator:
     # then move agents and update figure
     def update(self, *args):
         if simulation_finished(self.agents):
-            return 1
+            self.planner.evaluate(self.grid, self.agents)
+            sys.exit()
         if (self.rendercount % 10) == 0:
             deviations = self.deviate()
             if deviations:

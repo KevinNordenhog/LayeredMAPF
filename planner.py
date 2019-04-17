@@ -5,23 +5,31 @@ from ecbs import ECBS
 from post import post
 import sys
 import time
+from copy import deepcopy
 
 class Planner:
     schedule = {}
     planner = "Planner not chosen"
     delay_tolerance = sys.maxsize
 
+    # Evaluation data
+    time_global = 0
+    time_local = []
+    init_schedule = {}
+    deviation_count = 0
+
     def __init__(self, grid, agents, alg):
         self.planner = alg
-        print ("Global planner is executing")
-        start = time.time()
+        time_start = time.time()
         self.globalPlanner(grid, agents)
-        end = time.time()
-        self.evaluate(start, end, grid, agents)
+        self.init_schedule = deepcopy(self.schedule)
+        self.time_global = time.time()-time_start
+        self.evaluate(grid, agents)
 
 
     # Find a MAPF plan for the given grid, agents, and algorithm
     def globalPlanner(self, grid, agents):
+        print ("Path finding algorithm is running.")
         agent_list = dict2list(agents)
         # Run algorithn according to input
         if len(agent_list) == 1:
@@ -41,38 +49,44 @@ class Planner:
     # Based on the deviations that occured, the exisiting schedule,
     # and the current state of the map, find a new plan
     def localplanner(self, deviations, grid, agents):
-        print ("Local planner executing")
-        start = time.time()
         recompute = False
+        self.deviation_count += len(deviations)
         for agent in deviations:
             if agents[agent].delay > self.delay_tolerance:
-                print ("Local planner recomputing path due to %s:" % agent)
+                time_start = time.time()
                 self.globalPlanner(grid, agents)
-                end = time.time()
-                self.evaluate(start, end, grid, agents)
+                time_planner = time.time()-time_start
+                self.time_local += [time_planner]
                 recompute = True
                 break
         if not recompute:
-            print ("The delay can be tolerated. Recalculation not needed")
+            print ("The delay can be tolerated.")
     
-    # Evaluate the latest execution of the planner
-    # Print info about the problem and the schedule
-    def evaluate(self, start, end, grid, agents):
-        # Evaluate execution 
+    # Evaluate the execution
+    # (Local planner is only evaluated if executed)
+    def evaluate(self, grid, agents):
+        # Global planner evaluation
+        print ("\n----------------------------------")
+        print ("Evaluation (global planner):")
         print ("----------------------------------")
         print ("Planner: %s" % self.planner)
-        print ("Execution time: %f" % (end-start))
+        print ("Execution time: %f" % (self.time_global))
         print ("Number of agents: %d" % len(agents))
         print ("Size of grid: %dx%d" % (grid.width, grid.heigth))
-        success_cnt = 0
-        for agent in agents:
-            if self.schedule[agent]:
-                success_cnt += 1
-        completion = 100*(success_cnt/len(agents))
-        print ("Completion rate: %d%%" % completion)
-        print ("Makespan: %d" % makespan(self.schedule))
-        print ("Delay tolerance: %d" % (post(self.schedule)))
+        print ("Makespan: %d" % makespan(self.init_schedule))
+        print ("Delay tolerance: %d" % (post(self.init_schedule)))
         print ("----------------------------------")
+        # Local planner evaluation
+        if self.time_local:
+            print ("\n----------------------------------")
+            print ("Evaluation (local planner):")
+            print ("----------------------------------")
+            print ("Planner: delay tolerance")
+            print ("Total excution time: %f" % sum(self.time_local))
+            print ("Number of deviations: %d" % self.deviation_count)
+            print ("Local planner executions: %d" % len(self.time_local))
+            print ("----------------------------------")
+            
     
 
 # Put the values in the dictionary into a list

@@ -13,7 +13,11 @@ class Planner:
 
     def __init__(self, grid, agents, alg):
         self.planner = alg
+        print ("Global planner is executing")
+        start = time.time()
         self.globalPlanner(grid, agents)
+        end = time.time()
+        self.evaluate(start, end, grid, agents)
 
 
     # Find a MAPF plan for the given grid, agents, and algorithm
@@ -34,7 +38,7 @@ class Planner:
             self.delay_tolerance = post(self.schedule)
         return self.schedule
     
-    # Based on the deviations that occured,
+    # Based on the deviations that occured, the exisiting schedule,
     # and the current state of the map, find a new plan
     def localplanner(self, deviations, grid, agents):
         print ("Local planner executing")
@@ -66,14 +70,18 @@ class Planner:
                 success_cnt += 1
         completion = 100*(success_cnt/len(agents))
         print ("Completion rate: %d%%" % completion)
-        print ("Makespan: %d" % (len(max(self.schedule.values(), key=lambda
-                schedule: len(schedule)))))
+        print ("Makespan: %d" % makespan(self.schedule))
         print ("Delay tolerance: %d" % (post(self.schedule)))
         print ("----------------------------------")
+    
 
-
+# Put the values in the dictionary into a list
 def dict2list(dictionary):
     dictlist = []
     for key, value in dictionary.items():
         dictlist.append(value)
     return dictlist
+
+# The length of the longest path in schedule
+def makespan(schedule):
+    return len(max(schedule.values(), key=lambda s: len(s)))

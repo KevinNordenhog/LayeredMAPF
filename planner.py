@@ -44,6 +44,7 @@ class Planner:
                 alg = ECBS(grid, agent_list)
             self.schedule = alg.schedule
             self.delay_tolerance = post(self.schedule)
+            print ("New delay tolerance is %d." % self.delay_tolerance)
         return self.schedule
     
     # Based on the deviations that occured, the exisiting schedule,

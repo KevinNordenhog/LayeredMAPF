@@ -24,6 +24,7 @@ from planner import Planner
 class Simulator:
     def __init__(self, world, alg):
         self.delays = False
+        self.delay_probability = 5
         self.dynamic = True if world["map"]["dynamic_obstacles"] else False
         self.grid = Grid(world)        
         self.agents = createagents(world)
@@ -73,7 +74,7 @@ class Simulator:
         # Delay agents based on delay probability
         if self.delays:
             for agent in self.agents.values():
-                if random.randint(0,100) < 10:
+                if random.randint(0,100) < self.delay_probability:
                     deviations += [agent.name]
                     self.schedule[agent.name].insert(0, agent.pos)
                     agent.delay += 1

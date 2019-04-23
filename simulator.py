@@ -5,6 +5,7 @@ import argparse
 import operator
 import time
 import random
+import sys
 
 # Plot
 import numpy as np
@@ -17,53 +18,17 @@ from matplotlib.patches import Circle, Rectangle, Arrow
 
 from agent import Agent
 from world import Grid, Cell
-from globalPlanner import GlobalPlanner
+from planner import Planner
 
 
 class Simulator:
     def __init__(self, world, alg):
-        self.delays = True
-        if world["map"]["dynamic_obstacles"]:
-            self.dynamic = True
-        else:
-            self.dynamic = False
+        self.delays = False
+        self.dynamic = True if world["map"]["dynamic_obstacles"] else False
         self.grid = Grid(world)        
-        self.agents = self.createagents(world)
-        self.alg = alg
-        # Execute global planner and measure time
-        print ("Global planner executing.")
-        start = time.time()
-        self.planner = GlobalPlanner(self.grid.grid, self.agents, self.alg)
-        end = time.time()
+        self.agents = createagents(world)
+        self.planner = Planner(self.grid, self.agents, alg)
         self.schedule = self.planner.schedule
-        self.evaluate_planner(self.planner, end, start)
-
-
-    def evaluate_planner(self, planner, end, start):
-        # Evaluate execution 
-        print ("----------------------------------")
-        print ("Planner: %s" % planner.planner)
-        print ("Execution time: %f" % (end-start))
-        print ("Number of agents: %d" % len(self.agents))
-        print ("Size of grid: %dx%d" % (self.grid.width, self.grid.heigth))
-        success_cnt = 0
-        for agent in self.agents:
-            if self.schedule[agent.name]:
-                success_cnt += 1
-        completion = 100*(success_cnt/len(self.agents))
-        print ("Completion rate: %d%%" % completion)
-        print ("Makespan: %d" % (len(max(self.schedule.values(), key=lambda
-                schedule: len(schedule)))))
-        print ("----------------------------------")
-
-    def createagents(self, world):
-        agents = []
-        for agent in world["agents"]:
-            name = agent["name"]
-            goal = (agent["goal"][0],agent["goal"][1])
-            start = (agent["start"][0],agent["start"][1])
-            agents.append(Agent(name, goal, start))
-        return agents
 
     # Start the simulation, plot the grid and update it continously
     def simulate(self):
@@ -76,19 +41,18 @@ class Simulator:
         self.stepcount = 0
         ani = animation.FuncAnimation(self.fig, self.update, interval=50)
         plt.show()
-    
-    # Run the local planner
+
+    # Create deviations and run local planner if necessary,
+    # then move agents and update figure
     def update(self, *args):
+        if simulation_finished(self.agents):
+            self.planner.evaluate(self.grid, self.agents)
+            sys.exit()
         if (self.rendercount % 10) == 0:
             deviations = self.deviate()
             if deviations:
-                print ("")
-                print ("Deviation occured on time %s at %s." % (self.stepcount,deviations))
-                print ("Local planner executing")
-                start = time.time()
-                self.localplanner()
-                end = time.time()
-                self.evaluate_planner(self.planner, end, start)
+                print ("\nDeviation occured on time %s at %s." % (self.stepcount,deviations))
+                self.planner.localplanner(deviations, self.grid, self.agents)
                 self.createfig()
             self.stepcount += 1
         self.updatefig()
@@ -108,19 +72,13 @@ class Simulator:
                     self.grid.grid[x][y].obstacle = True
         # Delay agents based on delay probability
         if self.delays:
-            for agent in self.agents:
-                if random.randint(0,100) < 5:
-                    pass
-                    # deviations += [agent.name]
-                    # How should we create deviations here?
+            for agent in self.agents.values():
+                if random.randint(0,100) < 10:
+                    deviations += [agent.name]
+                    self.schedule[agent.name].insert(0, agent.pos)
+                    agent.delay += 1
         return deviations
 
-    def localplanner(self):
-        for agent in self.agents:
-            agent.step = 0
-        planner = GlobalPlanner(self.grid.grid, self.agents, self.alg)
-        self.schedule = planner.schedule
-        
     # Create patches that visualizes the grid
     def createfig(self):
         patches = []
@@ -140,10 +98,10 @@ class Simulator:
                     (cell[0], cell[1]), 1, 1, alpha=0.2, facecolor='blue', edgecolor='black'))
         # Add agents to grid
         self.circles = {}
-        for agent in self.agents:
+        for agent in self.agents.values():
             self.circles[agent.name] = Circle(
-                (agent.x+0.5, agent.y+0.5), 0.3, facecolor='orange', edgecolor='black')
-            self.circles[agent.name].facecolor = 'orange'
+                (agent.x+0.5, agent.y+0.5), 0.3, facecolor='blue', edgecolor='black')
+            self.circles[agent.name].facecolor = 'yellow'
             patches.append(self.circles[agent.name])
         # Update subplot
         [p.remove() for p in reversed(self.ax.patches)]
@@ -153,19 +111,20 @@ class Simulator:
 
     # Update the figure to show moving agents
     def updatefig(self):
-        for agent in self.agents:
-            # Goal unreachable / reached
-            if not agent.goal in self.schedule[agent.name]:
-                self.circles[agent.name].facecolor = 'red'
-                continue
-            if (agent.pos == agent.goal and
-                    agent.step == len(self.schedule[agent.name])-1):
-                self.circles[agent.name].facecolor = 'lightgreen'
-            # Update position
+        for agent in self.agents.values():
+            # Move agent positions according to schedule
             pos = self.updatePos(agent) 
             self.circles[agent.name].center = pos
-        # Updates the circles according to new positions and colors
-        for agent in self.agents:
+            # Color the agents
+            if (agent.pos == agent.goal and
+                    not self.schedule[agent.name]):
+                self.circles[agent.name].facecolor = 'lightgreen'
+            elif not agent.goal in self.schedule[agent.name]:
+                self.circles[agent.name].facecolor = 'red'
+            elif agent.delay:
+                self.circles[agent.name].facecolor = 'orange'
+        # Updates the figure
+        for agent in self.agents.values():
             self.circles[agent.name].set_facecolor(self.circles[agent.name].facecolor)
     
 
@@ -174,10 +133,8 @@ class Simulator:
     def updatePos(self, agent):
         currentP = self.circles[agent.name].center # the circles position
         if (agent.pos == agent.goal and 
-                agent.step == len(self.schedule[agent.name])-1):
+                not self.schedule[agent.name]):
             return currentP
-        curr = self.schedule[agent.name][agent.step]
-        nxt = self.schedule[agent.name][agent.step+1]
         # Handle wait
         agent.rendercount += 1
         if agent.iswaiting:
@@ -185,8 +142,11 @@ class Simulator:
             if not agent.iswaiting:
                 agent.step += 1
             return currentP
+        curr = agent.pos
+        nxt = self.schedule[agent.name][0]
         if curr == nxt:
             agent.iswaiting = True
+            self.schedule[agent.name].pop(0)
             return currentP
         # Update and return new position
         newpos = tuple(map(operator.add,
@@ -199,12 +159,32 @@ class Simulator:
             agent.x, agent.y = agent.pos[0], agent.pos[1]
             self.grid.grid[agent.x][agent.y].occupied = True
             agent.step += 1
+            self.schedule[agent.name].pop(0)
         return newpos
 
+# Create a dictonary containing all agents
+def createagents(world):
+    agents = {}
+    for agent in world["agents"]:
+        name = agent["name"]
+        goal = (agent["goal"][0],agent["goal"][1])
+        start = (agent["start"][0],agent["start"][1])
+        agents[name] = Agent(name, goal, start)
+    return agents
+
+# Check if all agents have reached their goals
+def simulation_finished(agents):
+    finished = True
+    for agent in agents.values():
+        if agent.pos != agent.goal:
+            finished = False
+    return finished
+
+# Parse input and run simulator
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("map", help="input file containing map")
-    parser.add_argument("alg", help="algorithmss: cbs, castar")
+    parser.add_argument("alg", help="algorithms: cbs, castar")
     args = parser.parse_args()
 
 

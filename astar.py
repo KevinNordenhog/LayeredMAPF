@@ -16,6 +16,8 @@ class PriorityQueue:
 
 # [objects], (x,y), (x,y), {(x,y): [t1,t2,t3]}
 def aStar(grid, start, goal, constraints):
+    if start == goal:
+        return [goal]
     frontier = PriorityQueue()
     frontier.put(start + (0,), 0)
     came_from = {}

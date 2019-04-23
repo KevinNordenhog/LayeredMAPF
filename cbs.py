@@ -1,4 +1,5 @@
 from astar import aStar
+from post import post
 import heapq
 import copy
 
@@ -52,8 +53,6 @@ class CBS():
 
         while not self.OPEN.empty():
             current = self.OPEN.get()
-            #print (current.constraints)
-            #print (current.cost)
             conflicts = self.validate(current)
             #if goal node
             if self.finished:
@@ -65,29 +64,7 @@ class CBS():
                                         
                     #Set constraints for the new node
                     new_node.constraints = copy.deepcopy(current.constraints) #dict1 = dict(dict2)
-                    if conflicts[pos,t][1] == []:
-                        if agent in new_node.constraints:
-                            if pos in new_node.constraints[agent]:
-                                if t not in new_node.constraints[agent][pos]:
-                                    new_node.constraints[agent][pos].append((t,""))
-                            else:
-                                new_node.constraints[agent][pos] = [(t,"")]
-                        else:
-                            new_node.constraints[agent] = {}
-                            new_node.constraints[agent][pos] = [(t,"")]
-                    else:
-                        for a in conflicts[pos,t][1]:
-                            if agent in new_node.constraints:
-                                if pos in new_node.constraints[agent]:
-                                    if t not in new_node.constraints[agent][pos]:
-                                        new_node.constraints[agent][pos].append((t,a))
-                                else:
-                                    new_node.constraints[agent][pos] = [(t,a)]
-                            else:
-                                new_node.constraints[agent] = {}
-                                new_node.constraints[agent][pos] = [(t,a)]
-
-                    
+                    self.addConstraints(new_node, conflicts, pos, t, agent)
 
                     #Find solution
                     self.low_level(grid, agents, new_node)                  
@@ -101,6 +78,29 @@ class CBS():
                         #Find cost for the node
                         self.SIC(new_node)
                         self.OPEN.put(new_node, new_node.cost)           
+
+    def addConstraints(self, node, conflicts, pos, t, agent):
+        if conflicts[pos,t][1] == []:
+            if agent in node.constraints:
+                if pos in node.constraints[agent]:
+                    if t not in node.constraints[agent][pos]:
+                        node.constraints[agent][pos].append((t,""))
+                else:
+                    node.constraints[agent][pos] = [(t,"")]
+            else:
+                node.constraints[agent] = {}
+                node.constraints[agent][pos] = [(t,"")]
+        else:
+            for a in conflicts[pos,t][1]:
+                if agent in node.constraints:
+                    if pos in node.constraints[agent]:
+                        if t not in node.constraints[agent][pos]:
+                            node.constraints[agent][pos].append((t,a))
+                    else:
+                        node.constraints[agent][pos] = [(t,a)]
+                else:
+                    node.constraints[agent] = {}
+                    node.constraints[agent][pos] = [(t,a)]
 
     def low_level(self, grid, agents, node):
         paths = {}
@@ -128,15 +128,9 @@ class CBS():
                 if i < len(node.solution[agent]):
                     if node.solution[agent][i] in positions:
                         found_conflict = True
-                        if (node.solution[agent][i],i) in conflicts:
-                            conflicts[(node.solution[agent][i],i)][0].append(agent)
-                            #conflicts[(node.solution[agent][i],i)][1].append(agent)
-                        else:
-                            #conflicts[(node.solution[agent][i],i)] = ([agent] + positions[node.solution[agent][i]],[agent] + positions[node.solution[agent][i]])
-                            conflicts[(node.solution[agent][i],i)] = ([agent] + positions[node.solution[agent][i]],[])
-                        positions[node.solution[agent][i]].append(agent) 
-                    else:
-                        positions[node.solution[agent][i]] = [agent]
+                        self.addConflicts(conflicts, positions,  node, agent, i, i )
+                    self.addPos(positions,  node, agent, i)
+                    
                     #full frontal collisions
                     #If an agents previous position is visited by another and vise versa
                     if node.solution[agent][i-1] in positions:
@@ -150,7 +144,6 @@ class CBS():
                                         conflicts[(node.solution[agent][i],i)][0].append(agent)
                                         conflicts[(node.solution[agent][i],i)][1].append(a)
                                 else:
-                                    #conflicts[(node.solution[agent][i],i)] = ([agent] + positions[node.solution[agent][i]],[a] + positions[node.solution[agent][i]])
                                     conflicts[(node.solution[agent][i],i)] = ([agent] + positions[node.solution[agent][i]],[a])
 
                                 #Agent2
@@ -158,9 +151,7 @@ class CBS():
                                     if a not in conflicts[(node.solution[a][i],i)]:
                                         conflicts[(node.solution[a][i],i)][0].append(a)
                                         conflicts[(node.solution[a][i],i)][1].append(agent)
-
                                 else:
-                                    #conflicts[(node.solution[a][i],i)] = ([a] + positions[node.solution[a][i]],[agent] + positions[node.solution[a][i]])
                                     conflicts[(node.solution[a][i],i)] = ([a] + positions[node.solution[a][i]],[agent])
 
 
@@ -168,19 +159,8 @@ class CBS():
                 else:
                     if node.solution[agent][-1] in positions:
                         found_conflict = True
-                        if (node.solution[agent][-1],i) in conflicts:
-                            #conflicts[(node.solution[agent][-1],i)].append(agent)
-                            conflicts[(node.solution[agent][-1],i)][0].append(agent)
-                            conflicts[(node.solution[agent][-1],i)][1].append(agent)
-
-                        else:
-                            #conflicts[(node.solution[agent][-1],i)] = [agent] + positions[node.solution[agent][-1]]
-                            conflicts[(node.solution[agent][-1],i)] = ([agent] + positions[node.solution[agent][-1]],[agent] + positions[node.solution[agent][-1]])
-
-
-                        positions[node.solution[agent][-1]].append(agent)
-                    else:
-                        positions[node.solution[agent][-1]] = [agent]
+                        self.addConflicts(conflicts, positions,  node, agent, -1, i )
+                    self.addPos(positions,  node, agent, -1)
 
             if found_conflict:
                 return conflicts
@@ -188,3 +168,15 @@ class CBS():
             self.finished = True
             return {}
 
+    def addPos(self, positions,  node, agent, i):
+        if node.solution[agent][i] in positions:
+            positions[node.solution[agent][i]].append(agent) 
+        else:
+            positions[node.solution[agent][i]] = [agent]
+
+    # i = index for schedule & t = time 
+    def addConflicts(self, conflicts, positions,  node, agent, i, t ):
+        if (node.solution[agent][i],t) in conflicts:
+            conflicts[(node.solution[agent][i],t)][0].append(agent)
+        else:
+            conflicts[(node.solution[agent][i],t)] = ([agent] + positions[node.solution[agent][i]],[])

@@ -2,6 +2,7 @@ from astar import aStar
 from CAstar import CAstar
 from cbs import CBS
 from ecbs import ECBS
+from tailcbs import TailCBS
 from post import post
 import sys
 import time
@@ -36,12 +37,15 @@ class Planner:
             self.planner = "AStar"
             self.schedule[agents[0].name] = aStar(grid.grid, agents[0].pos, agents[0].goal, {})
         else:
-            if self.planner =="castar":
+            if self.planner == "castar":
                 alg = CAstar(grid.grid, agent_list)
-            elif self.planner =="cbs":
+            elif self.planner == "cbs":
                 alg = CBS(grid.grid, agent_list)
-            elif self.planner =="ecbs":
-                alg = ECBS(grid, agent_list)
+            elif self.planner == "ecbs":
+                alg = ECBS(grid.grid, agent_list)
+            elif self.planner == "tailcbs":
+                self.delay_tolerance = 5
+                alg = TailCBS(grid.grid, agent_list, self.delay_tolerance)
             self.schedule = alg.schedule
             self.delay_tolerance = post(self.schedule)
             print ("New delay tolerance is %d." % self.delay_tolerance)

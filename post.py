@@ -4,6 +4,8 @@ def post(schedule):
     windows = []
     count = {}
     #loops from 0 to the length of the longest paths
+    if not schedule:
+        return -1
     for i in range(0, len(schedule[max(schedule, key = lambda x: len(schedule[x]))])):
         stops = []
         for agent in schedule:

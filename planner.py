@@ -35,7 +35,8 @@ class Planner:
         # Run algorithn according to input
         if len(agent_list) == 1:
             self.planner = "AStar"
-            self.schedule[agents[0].name] = aStar(grid.grid, agents[0].pos, agents[0].goal, {})
+            self.schedule[agent_list[0].name] = aStar(grid.grid,
+                    agent_list[0].pos, agent_list[0].goal, {})
         else:
             if self.planner == "castar":
                 alg = CAstar(grid.grid, agent_list)
@@ -44,11 +45,14 @@ class Planner:
             elif self.planner == "ecbs":
                 alg = ECBS(grid.grid, agent_list)
             elif self.planner == "tailcbs":
-                self.delay_tolerance = 5
+                self.delay_tolerance = 2
                 alg = TailCBS(grid.grid, agent_list, self.delay_tolerance)
             self.schedule = alg.schedule
             self.delay_tolerance = post(self.schedule)
             print ("New delay tolerance is %d." % self.delay_tolerance)
+        print ("###########")
+        print ("Schedule:", self.schedule)
+        print ("###########")
         return self.schedule
     
     # Based on the deviations that occured, the exisiting schedule,
@@ -103,4 +107,7 @@ def dict2list(dictionary):
 
 # The length of the longest path in schedule
 def makespan(schedule):
-    return len(max(schedule.values(), key=lambda s: len(s)))
+    if schedule:
+        return len(max(schedule.values(), key=lambda s: len(s)))
+    else:
+        return -1

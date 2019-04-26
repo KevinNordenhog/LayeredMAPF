@@ -2,6 +2,7 @@ from astar import aStar
 from post import post
 import heapq
 import copy
+import time
 
 class PriorityQueue:
     #used to pick objects with the same priority 
@@ -38,13 +39,14 @@ class cbs_node:
         return size
             
 
-#Conflict based search
+# Conflict based search
 class TailCBS():
     schedule = {}
     finished = False
 
     def __init__(self, grid, agents, tail):
-        self.tail = tail
+        self.tail = 4
+        print ("Finding solutioon with delay tolerance", self.tail)
         self.OPEN = PriorityQueue()
         #Root node setup
         root = cbs_node()
@@ -53,74 +55,69 @@ class TailCBS():
         self.OPEN.put(root, root.cost)
 
         while not self.OPEN.empty():
+            print ("Length:", len(self.OPEN.elements))
+            #time.sleep(1)
             current = self.OPEN.get()
             conflicts = self.validate(current)
-            #if goal node
-            if self.finished:
-                print ("Cost: %d" % current.cost)
+            if not conflicts:  # Goal reached
+                print ("\nResults found with cost: %d" % current.cost)
                 self.schedule = current.solution
                 break
-            for pos,t in conflicts:
-                for (agent,_) in conflicts[pos,t][0]:
-                    for (other_agent,_) in conflicts[pos,t][0]:
-                        if not other_agent == agent:
-                            new_node = cbs_node()            
-                                                
-                            #Set constraints for the new node
-                            new_node.constraints = copy.deepcopy(current.constraints) #dict1 = dict(dict2)
-                            # self.addConstraints(new_node, conflicts, pos, t, agent)
-                            if conflicts[pos,t][1] == []:
-                                self.addConstraints(new_node, conflicts, t, agent, "", current.solution, other_agent)
-                            
-                            else:
-                                for a in conflicts[pos,t][1]:
-                                    self.addConstraints(new_node, conflicts, t, agent, a, current.solution, other_agent)
+            print ("\nConflict found:", conflicts)
+            print ("Constraints:", current.constraints)
+            print ("Path: ", current.solution)
+            # Set constraints for the new node
+            for pos, c_agents in conflicts.items():
+                # Expand each conflicting node
+                for i in range(0, len(c_agents)):
+                    new_node = cbs_node()            
+                    new_node.valid = True
+                    # Add constraints to new node
+                    new_node.constraints = copy.deepcopy(current.constraints)
+                    for j in range(0, len(c_agents)):
+                        if i == j:
+                            continue
+                        agent = c_agents[i][0]
+                        t1 = c_agents[i][1]
+                        other_agent = c_agents[j][0]
+                        t2 = c_agents[j][1]
+                        self.addConstraints(new_node, current.solution, 
+                                agent, t1, other_agent, t2)
+                    if not new_node.valid:
+                        continue
+                    # Find solution taking constraints into account
+                    self.low_level(grid, agents, new_node)                  
+                    valid = True
+                    for agent in new_node.solution:
+                        if not new_node.solution[agent]:
+                            valid = False
+                    # Only expand nodes containning path for all agents
+                    if valid:
+                        self.SIC(new_node) # sum of individual cost of node
+                        self.OPEN.put(new_node, new_node.cost) 
 
-                            print (new_node.constraints)
-                            #Find solution
-                            self.low_level(grid, agents, new_node)                  
-                            valid = True
-                            for agent in new_node.solution:
-                                if new_node.solution[agent] == []:
-                                    valid = False
-                            
-                            #Only expand nodes containning path for all agents
-                            if valid:
-                                #Find cost for the node
-                                self.SIC(new_node)
-                                self.OPEN.put(new_node, new_node.cost)           
-
-    #constraints: …. … .. .
-    def addConstraints(self, node, conflicts, t, agent, a, paths, other_agent):
-        #print (conflicts)
-                
-        if agent in node.constraints:
-            for i in range(0, self.tail):
-                for j in range(0, i):
-                    if t < len(paths[other_agent]):
-                        pos = paths[other_agent][t-j]
-                        time = t+self.tail-i
-                        if pos in node.constraints[agent]:
-                            if (time,a) not in node.constraints[agent][pos]:
-                                node.constraints[agent][pos].append((time,a))
-                        else:
-                            node.constraints[agent][pos] = [(time,a)]
-                    #else mutherfucker
-        else:
+    # For a given agent and conflict, add a constraint at the position of
+    # conflict that says that the conflicting agent may not step there for as long as
+    # the tail remains
+    def addConstraints(self, node, paths, agent, t1, other_agent, t2):
+        print("t/agent/other_agent", t2, agent, other_agent)
+        if t1==0:
+            node.valid = False
+        if not agent in node.constraints:
             node.constraints[agent] = {}
-            node.constraints[agent][paths[agent][t]] = [(t,a)]
-            for i in range(0, self.tail):
-                for j in range(0, i):
-                    if t < len(paths[other_agent]):
-                        pos = paths[other_agent][t-j]
-                        time = t+self.tail-i
-                        if pos in node.constraints[agent]:
-                            if (time,a) not in node.constraints[agent][pos]:
-                                node.constraints[agent][pos].append((time,a))
-                        else:
-                            node.constraints[agent][pos] = [(time,a)]
-                    #else mutherfucker
-    
+        tmp = t2 if t2<len(paths[other_agent]) else -1
+        pos = paths[other_agent][tmp]
+        for i in range(-self.tail, self.tail+1):
+            if t2+i <= 0:
+                continue
+            if not pos in node.constraints[agent]:
+                node.constraints[agent][pos] = []
+            # Add contraints (and make sure contraints doesn't exist already)
+            if not t2+i in [time for time,_ in node.constraints[agent][pos]]:
+                node.constraints[agent][pos].append((t2+i, ""))
+                print("%s: (%s, t=%d) cause %s" % (agent, pos, t2+i,other_agent))
+   
+    # Find a new solution that satisfies the given constraints (astar)
     def low_level(self, grid, agents, node):
         paths = {}
         for agent in agents:
@@ -130,89 +127,68 @@ class TailCBS():
                 paths[agent.name] = aStar(grid, agent.pos, agent.goal, {})
         node.solution = paths
 
-    #Sum of individual cost
+    #Sum of individual cost (sum of all individual path lengths)
     def SIC(self, node):
         s = 0
         for agent in node.solution:    
             s += len(node.solution[agent])
         node.cost = s
+
+    # The length of the longest path in schedule
+    def makespan(self, solution):
+        return len(solution[max(solution, key = lambda x: len(solution[x]))])
        
+    # Check if a solution is valid or not
+    # (No collisions, and delay tolerance should be satisfied)
     def validate(self, node):
         conflicts = {}
-        found_conflict = False
-        #loops from i=0 to i=length of the longest path
-        for i in range(0, len(node.solution[max(node.solution, key = lambda x: len(node.solution[x]))])):
+        longest_path = self.makespan(node.solution)
+        for t in range(0, longest_path):
             positions = {}
+            # The position of each agent and their tails at time t
             for agent in node.solution:
-                if i < len(node.solution[agent]):
-                    if node.solution[agent][i] in positions:
-                        found_conflict = True
-                        self.addConflicts(conflicts, positions,  node, agent, i, i)
-                    self.addPos(positions,  node, agent, i, i)
+                self.addPos(positions, node, agent, t)
+            # Validate that the path of each agent does not conflict with other
+            # agents at time t.
+            for pos, agents in positions.items():
+                if len(agents) > 1:
+                    conflicts[pos] = agents
+                    return conflicts
+        # Optimal solution found if there is no conflict
+        return conflicts
 
-                    #full frontal collisions
-                    #If an agents previous position is visited by another and vise versa
-                    if node.solution[agent][i-1] in positions:
-                        for (a,_) in positions[node.solution[agent][i-1]]:
-                            if (node.solution[a][i-1] == node.solution[agent][i]) and not (agent == a):
-                                found_conflict = True
-
-                                #Agent1
-                                if (node.solution[agent][i],i) in conflicts:
-                                    if agent not in conflicts[(node.solution[agent][i],i)]:
-                                        conflicts[(node.solution[agent][i],i)][0].append(agent)
-                                        conflicts[(node.solution[agent][i],i)][1].append(a)
-                                else:
-                                    conflicts[(node.solution[agent][i],i)] = ([agent] + positions[node.solution[agent][i]],[a])
-
-                                #Agent2
-                                if (node.solution[a][i],i) in conflicts: 
-                                    if a not in conflicts[(node.solution[a][i],i)]:
-                                        conflicts[(node.solution[a][i],i)][0].append(a)
-                                        conflicts[(node.solution[a][i],i)][1].append(agent)
-
-                                else:
-                                    conflicts[(node.solution[a][i],i)] = ([a] + positions[node.solution[a][i]],[agent])
-
-
-                #if the agent is at the goal, we keep checking the goal-position
+    # Set the current position of an agent and its tail
+    def addPos(self, positions,  node, agent, t):
+        for k in range(0, self.tail+1):
+            time = t-k
+            pos = t-k
+            if time < 0: # Check for negative time
+                continue
+            if time >= len(node.solution[agent]):
+                time = t
+                pos = len(node.solution[agent])-1
+            if node.solution[agent][pos] in positions:
+                c = [x for x,_ in positions[node.solution[agent][pos]]] # agent
+                n = [x for _,x in positions[node.solution[agent][pos]]] # time
+                # Update the time of the agent if it is in list already
+                # (only save the latest time on that position)
+                if agent in c: #
+                    i = c.index(agent)
+                    if time > n[i]:
+                        positions[node.solution[agent][pos]][i][1] = time
+                # If agent is not in list, add it
                 else:
-                    if node.solution[agent][-1] in positions:
-                        found_conflict = True
-                        self.addConflicts(conflicts, positions,  node, agent, -1, i )
-                    self.addPos(positions,  node, agent, -1, i)
+                    positions[node.solution[agent][pos]].append((agent, time))
+            else:
+                positions[node.solution[agent][pos]] = [(agent, time)]
+            
 
-            if found_conflict:
-                return conflicts
-        if not found_conflict:
-            self.finished = True
-            return {}
-
-    def addPos(self, positions,  node, agent, i, t):
-        if i >= 0:
-            for j in range(0,self.tail):
-                if node.solution[agent][i-j] in positions:
-                    positions[node.solution[agent][i-j]].append((agent, node.solution[agent][i])) 
-                else:
-                    positions[node.solution[agent][i-j]] = [(agent, node.solution[agent][i])]
+    # Add a conflict on position pos at time t 
+    def addConflicts(self, node, t, conflicts, agent, positions):
+        pos_cnt = t if t < len(node.solution[agent]) else -1
+        pos = node.solution[agent][pos_cnt]
+        if (pos,t) in conflicts:
+            conflicts[(pos,t)][0].append((agent,pos))
         else:
-            #if the agent is in the goal we want to make sure the tail gets added to position.
-            j = self.tail - (t - len(node.solution[agent]))
-            if j >= 0 :
-                for k in range(0, j):
-                    if node.solution[agent][i-k] in positions:
-                        positions[node.solution[agent][i-k]].append((agent, node.solution[agent][i])) 
-                    else:
-                        positions[node.solution[agent][i-k]] = [(agent, node.solution[agent][i])]
+            conflicts[(pos,t)] = ([(agent, pos)] + positions[pos], [])
 
-
-
-    # i = index for schedule & t = time 
-    def addConflicts(self, conflicts, positions,  node, agent, i, t ):
-        if (node.solution[agent][i],t) in conflicts:
-            conflicts[(node.solution[agent][i],t)][0].append((agent,node.solution[agent][i]))
-        else:
-            conflicts[(node.solution[agent][i],t)] = ([(agent,node.solution[agent][i])] + positions[node.solution[agent][i]],[])
-
-
-        #constraints: …. … .. .

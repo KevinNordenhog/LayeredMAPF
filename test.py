@@ -3,12 +3,12 @@ import simulator
 import yaml
 
 if __name__ == "__main__":
-    size = 10
-    density = 20
-    agents = 5
+    size = 5
+    density = 0
+    agents = 4
     dynamic_density = 0
     dynamic_probability = 0
-    global_planner = "cbs"
+    global_planner = "tailcbs"
 
     map_config = generatemap.gen_map(size, density, agents,
             dynamic_density, dynamic_probability)
@@ -16,5 +16,5 @@ if __name__ == "__main__":
     world = yaml.load(map_config)
 
     sim = simulator.Simulator(world, global_planner)
-    sim.delays = True
+    sim.delays = False
     sim.simulate()

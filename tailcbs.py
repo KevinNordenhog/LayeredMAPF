@@ -19,7 +19,6 @@ class PriorityQueue:
         self.i += 1
     
     def get(self):
-        #print (self.elements)
         return heapq.heappop(self.elements)[2]
 
 class cbs_node:
@@ -45,7 +44,7 @@ class TailCBS():
     finished = False
 
     def __init__(self, grid, agents, tail):
-        self.tail = 4
+        self.tail = 5
         print ("Finding solutioon with delay tolerance", self.tail)
         self.OPEN = PriorityQueue()
         #Root node setup
@@ -56,16 +55,12 @@ class TailCBS():
 
         while not self.OPEN.empty():
             print ("Length:", len(self.OPEN.elements))
-            #time.sleep(1)
             current = self.OPEN.get()
             conflicts = self.validate(current)
             if not conflicts:  # Goal reached
                 print ("\nResults found with cost: %d" % current.cost)
                 self.schedule = current.solution
                 break
-            print ("\nConflict found:", conflicts)
-            print ("Constraints:", current.constraints)
-            print ("Path: ", current.solution)
             # Set constraints for the new node
             for pos, c_agents in conflicts.items():
                 # Expand each conflicting node
@@ -100,7 +95,6 @@ class TailCBS():
     # conflict that says that the conflicting agent may not step there for as long as
     # the tail remains
     def addConstraints(self, node, paths, agent, t1, other_agent, t2):
-        print("t/agent/other_agent", t2, agent, other_agent)
         if t1==0:
             node.valid = False
         if not agent in node.constraints:
@@ -115,7 +109,6 @@ class TailCBS():
             # Add contraints (and make sure contraints doesn't exist already)
             if not t2+i in [time for time,_ in node.constraints[agent][pos]]:
                 node.constraints[agent][pos].append((t2+i, ""))
-                print("%s: (%s, t=%d) cause %s" % (agent, pos, t2+i,other_agent))
    
     # Find a new solution that satisfies the given constraints (astar)
     def low_level(self, grid, agents, node):

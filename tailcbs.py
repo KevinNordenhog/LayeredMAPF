@@ -44,7 +44,7 @@ class TailCBS():
     finished = False
 
     def __init__(self, grid, agents, tail):
-        self.tail = 5
+        self.tail = tail
         print ("Finding solutioon with delay tolerance", self.tail)
         self.OPEN = PriorityQueue()
         #Root node setup

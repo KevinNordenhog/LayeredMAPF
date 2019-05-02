@@ -42,11 +42,13 @@ class Planner:
                 alg = CAstar(grid.grid, agent_list)
             elif self.planner == "cbs":
                 alg = CBS(grid.grid, agent_list)
+                self.node_cnt = alg.OPEN.i
             elif self.planner == "ecbs":
                 alg = ECBS(grid.grid, agent_list)
             elif self.planner == "tailcbs":
                 self.delay_tolerance = 2
                 alg = TailCBS(grid.grid, agent_list, self.delay_tolerance)
+                self.node_cnt = alg.OPEN.i
             self.schedule = alg.schedule
             self.delay_tolerance = post(self.schedule)
             print ("New delay tolerance is %d." % self.delay_tolerance)
@@ -55,6 +57,11 @@ class Planner:
     # Based on the deviations that occured, the exisiting schedule,
     # and the current state of the map, find a new plan
     def localplanner(self, deviations, grid, agents):
+        # If the map has changed, 
+        if dynamic:
+            self.globalPlanner(grid, agents)
+            return
+        # Check if delay is small enough to skip recomputation
         recompute = False
         self.deviation_count += len(deviations)
         for agent in deviations:

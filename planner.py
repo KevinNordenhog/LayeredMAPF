@@ -93,6 +93,7 @@ class Planner:
         print ("Number of agents: %d" % len(agents))
         print ("Size of grid: %dx%d" % (grid.width, grid.heigth))
         print ("Makespan: %d" % makespan(self.init_schedule))
+        print ("Sum of individual cost: %d" % sic(self.init_schedule))
         print ("Delay tolerance: %d" % (post(self.init_schedule)))
         print ("----------------------------------")
         # Local planner evaluation

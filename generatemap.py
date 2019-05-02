@@ -19,7 +19,8 @@ def create_config(agents, size, density, dynamic_density, probability):
         while not pos_found:
             goal = (random.randint(0,size-1), random.randint(0,size-1))
             start = (random.randint(0,size-1), random.randint(0,size-1))
-            pos_found = not (start in a_start or goal in a_goals)
+            pos_found = (not (start in a_start or goal in a_goals
+                    or start in a_goals) and (start != goal))
         a_goals += [goal]
         a_start += [start]
         agent_config += "-   goal: [%d, %d]\n" %  (goal[0], goal[1])

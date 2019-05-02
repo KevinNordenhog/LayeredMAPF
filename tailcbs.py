@@ -19,7 +19,6 @@ class PriorityQueue:
         self.i += 1
     
     def get(self):
-        #print (self.elements)
         return heapq.heappop(self.elements)[2]
 
 class cbs_node:
@@ -57,7 +56,6 @@ class TailCBS():
 
         while not self.OPEN.empty():
             #print ("Length:", len(self.OPEN.elements))
-            #time.sleep(1)
             current = self.OPEN.get()
             conflicts = self.validate(current)
             if not conflicts:  # Goal reached

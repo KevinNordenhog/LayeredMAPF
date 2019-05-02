@@ -43,11 +43,15 @@ class CBS():
     schedule = {}
     finished = False
 
-    def __init__(self, grid, agents):
+    def __init__(self, grid, agents, agent_dict):
         self.OPEN = PriorityQueue()
         #Root node setup
         root = cbs_node()
-        self.low_level(grid, agents, root)       
+
+        #Run the low level for all agents
+        for agent in agents:
+            self.low_level(grid, agent, root)
+
         self.SIC(root)
         self.OPEN.put(root, root.cost)
 
@@ -65,9 +69,11 @@ class CBS():
                     #Set constraints for the new node
                     new_node.constraints = copy.deepcopy(current.constraints) #dict1 = dict(dict2)
                     self.addConstraints(new_node, conflicts, pos, t, agent)
+                    
+                    new_node.solution = copy.copy(current.solution)
 
                     #Find solution
-                    self.low_level(grid, agents, new_node)                  
+                    self.low_level(grid, agent_dict[agent], new_node)                  
                     valid = True
                     for agent in new_node.solution:
                         if new_node.solution[agent] == []:
@@ -101,15 +107,13 @@ class CBS():
                 else:
                     node.constraints[agent] = {}
                     node.constraints[agent][pos] = [(t,a)]
-
-    def low_level(self, grid, agents, node):
-        paths = {}
-        for agent in agents:
-            if agent.name in node.constraints:
-                paths[agent.name] = aStar(grid, agent.pos, agent.goal, node.constraints[agent.name])
-            else:
-                paths[agent.name] = aStar(grid, agent.pos, agent.goal, {})
-        node.solution = paths
+    
+    # Find a new solution that satisfies the given constraints (astar)
+    def low_level(self, grid, agent, node):
+        if agent.name in node.constraints:
+            node.solution[agent.name] = aStar(grid, agent.pos, agent.goal, node.constraints[agent.name])
+        else:
+            node.solution[agent.name] = aStar(grid, agent.pos, agent.goal, {})
 
     #Sum of individual cost
     def SIC(self, node):

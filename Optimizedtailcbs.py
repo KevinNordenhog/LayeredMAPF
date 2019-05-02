@@ -48,7 +48,6 @@ class OptTailCBS():
 
     def __init__(self, grid, agents, tail):
         self.tail = tail
-        #print ("Finding solutioon with delay tolerance", self.tail)
         self.OPEN = PriorityQueue()
         #Root node setup
         root = cbs_node()
@@ -57,7 +56,6 @@ class OptTailCBS():
         self.OPEN.put(root, root.cost)
 
         while not self.OPEN.empty():
-            #print ("Length:", len(self.OPEN.elements))
             #time.sleep(1)
             current = self.OPEN.get()
             conflicts = self.validate(current)

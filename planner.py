@@ -43,15 +43,15 @@ class Planner:
             if self.planner == "castar":
                 alg = CAstar(grid.grid, agent_list)
             elif self.planner == "cbs":
-                alg = CBS(grid.grid, agent_list)
+                alg = CBS(grid.grid, agent_list, agents)
                 self.node_cnt = alg.OPEN.i
             elif self.planner == "ecbs":
                 alg = ECBS(grid.grid, agent_list)
             elif self.planner == "tailcbs":
-                alg = TailCBS(grid.grid, agent_list, self.delay_tolerance)
+                alg = TailCBS(grid.grid, agent_list, self.delay_tolerance, agents)
                 self.node_cnt = alg.OPEN.i
             elif self.planner == "otailcbs":
-                alg = OptTailCBS(grid.grid, agent_list, self.delay_tolerance)
+                alg = OptTailCBS(grid.grid, agent_list, self.delay_tolerance, agents)
                 self.node_cnt = alg.OPEN.i
             self.schedule = alg.schedule
             self.delay_tolerance = post(self.schedule)

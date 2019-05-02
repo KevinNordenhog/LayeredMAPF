@@ -46,13 +46,17 @@ class OptTailCBS():
     count = 0
     const = []
 
-    def __init__(self, grid, agents, tail):
+    def __init__(self, grid, agents, tail, agent_dict):
         self.tail = tail
         #print ("Finding solutioon with delay tolerance", self.tail)
         self.OPEN = PriorityQueue()
         #Root node setup
         root = cbs_node()
-        self.low_level(grid, agents, root)       
+
+        #Run the low level for all agents
+        for agent in agents:
+            self.low_level(grid, agent, root) 
+
         self.SIC(root)
         self.OPEN.put(root, root.cost)
 
@@ -87,8 +91,11 @@ class OptTailCBS():
                     self.const.append(new_node.constraints)
                     if not new_node.valid:
                         continue
+
+                    new_node.solution = copy.copy(current.solution)
+                    
                     # Find solution taking constraints into account
-                    self.low_level(grid, agents, new_node)                  
+                    self.low_level(grid, agent_dict[agent], new_node)                  
                     valid = True
                     for agent in new_node.solution:
                         if not new_node.solution[agent]:
@@ -139,14 +146,11 @@ class OptTailCBS():
                     #print("%s: (%s, t=%d) cause %s" % (agent, pos, time, other_agent))
    
     # Find a new solution that satisfies the given constraints (astar)
-    def low_level(self, grid, agents, node):
-        paths = {}
-        for agent in agents:
-            if agent.name in node.constraints:
-                paths[agent.name] = aStar(grid, agent.pos, agent.goal, node.constraints[agent.name])
-            else:
-                paths[agent.name] = aStar(grid, agent.pos, agent.goal, {})
-        node.solution = paths
+    def low_level(self, grid, agent, node):
+        if agent.name in node.constraints:
+            node.solution[agent.name] = aStar(grid, agent.pos, agent.goal, node.constraints[agent.name])
+        else:
+            node.solution[agent.name] = aStar(grid, agent.pos, agent.goal, {})
 
     #Sum of individual cost (sum of all individual path lengths)
     def SIC(self, node):

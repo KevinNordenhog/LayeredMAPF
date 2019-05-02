@@ -3,6 +3,7 @@ from CAstar import CAstar
 from cbs import CBS
 from ecbs import ECBS
 from tailcbs import TailCBS
+from Optimizedtailcbs import OptTailCBS
 from post import post
 import sys
 import time
@@ -18,6 +19,7 @@ class Planner:
     time_local = []
     init_schedule = {}
     deviation_count = 0
+    delay_tolerance = 2
 
     def __init__(self, grid, agents, alg):
         self.planner = alg
@@ -45,8 +47,10 @@ class Planner:
             elif self.planner == "ecbs":
                 alg = ECBS(grid.grid, agent_list)
             elif self.planner == "tailcbs":
-                self.delay_tolerance = 2
                 alg = TailCBS(grid.grid, agent_list, self.delay_tolerance)
+            elif self.planner == "otailcbs":
+                alg = OptTailCBS(grid.grid, agent_list, self.delay_tolerance)
+
             self.schedule = alg.schedule
             self.delay_tolerance = post(self.schedule)
             print ("New delay tolerance is %d." % self.delay_tolerance)

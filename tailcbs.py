@@ -43,10 +43,11 @@ class cbs_node:
 class TailCBS():
     schedule = {}
     finished = False
+    const = []
 
     def __init__(self, grid, agents, tail):
-        self.tail = 4
-        print ("Finding solutioon with delay tolerance", self.tail)
+        self.tail = tail
+        #print ("Finding solutioon with delay tolerance", self.tail)
         self.OPEN = PriorityQueue()
         #Root node setup
         root = cbs_node()
@@ -55,17 +56,14 @@ class TailCBS():
         self.OPEN.put(root, root.cost)
 
         while not self.OPEN.empty():
-            print ("Length:", len(self.OPEN.elements))
+            #print ("Length:", len(self.OPEN.elements))
             #time.sleep(1)
             current = self.OPEN.get()
             conflicts = self.validate(current)
             if not conflicts:  # Goal reached
-                print ("\nResults found with cost: %d" % current.cost)
+                #print ("\nResults found with cost: %d" % current.cost)
                 self.schedule = current.solution
                 break
-            print ("\nConflict found:", conflicts)
-            print ("Constraints:", current.constraints)
-            print ("Path: ", current.solution)
             # Set constraints for the new node
             for pos, c_agents in conflicts.items():
                 # Expand each conflicting node
@@ -83,6 +81,9 @@ class TailCBS():
                         t2 = c_agents[j][1]
                         self.addConstraints(new_node, current.solution, 
                                 agent, t1, other_agent, t2)
+                    if new_node.constraints in self.const: 
+                        continue
+                    self.const.append(new_node.constraints)
                     if not new_node.valid:
                         continue
                     # Find solution taking constraints into account
@@ -100,7 +101,7 @@ class TailCBS():
     # conflict that says that the conflicting agent may not step there for as long as
     # the tail remains
     def addConstraints(self, node, paths, agent, t1, other_agent, t2):
-        print("t/agent/other_agent", t2, agent, other_agent)
+        #print("t/agent/other_agent", t2, agent, other_agent)
         if t1==0:
             node.valid = False
         if not agent in node.constraints:
@@ -115,7 +116,7 @@ class TailCBS():
             # Add contraints (and make sure contraints doesn't exist already)
             if not t2+i in [time for time,_ in node.constraints[agent][pos]]:
                 node.constraints[agent][pos].append((t2+i, ""))
-                print("%s: (%s, t=%d) cause %s" % (agent, pos, t2+i,other_agent))
+                #print("%s: (%s, t=%d) cause %s" % (agent, pos, t2+i,other_agent))
    
     # Find a new solution that satisfies the given constraints (astar)
     def low_level(self, grid, agents, node):

@@ -11,6 +11,7 @@ from copy import deepcopy
 
 class Planner:
     schedule = {}
+    cost = 0
     planner = "Planner not chosen"
     delay_tolerance = sys.maxsize
 
@@ -54,6 +55,7 @@ class Planner:
                 alg = OptTailCBS(grid.grid, agent_list, self.delay_tolerance)
                 self.node_cnt = alg.OPEN.i
             self.schedule = alg.schedule
+            self.cost = sic(self.schedule)
             self.delay_tolerance = post(self.schedule)
             print ("New delay tolerance is %d." % self.delay_tolerance)
         return self.schedule
@@ -119,3 +121,10 @@ def makespan(schedule):
         return len(max(schedule.values(), key=lambda s: len(s)))
     else:
         return -1
+
+#Sum of individual cost
+def sic(schedule):
+    s = 0
+    for agent in schedule:    
+        s += len(schedule[agent])
+    return s

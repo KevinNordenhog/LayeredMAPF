@@ -113,8 +113,9 @@ class OptTailCBS():
             start = -self.tail
         for j in range(start, 1):    
             if tmp+j < 0 :
-                #continue
-                if tmp == -1 and j < len(paths[other_agent])-max(t1,t2):
+                if  len(paths[other_agent]) < abs(j+tmp):
+                    continue
+                elif tmp == -1 and j < len(paths[other_agent])-max(t1,t2): 
                     pos = paths[other_agent][tmp+j]
                 else:
                     continue

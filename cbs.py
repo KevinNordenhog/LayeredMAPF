@@ -45,6 +45,7 @@ class CBS():
 
     def __init__(self, grid, agents, agent_dict):
         self.OPEN = PriorityQueue()
+        self.const = []
         #Root node setup
         root = cbs_node()
 
@@ -69,7 +70,9 @@ class CBS():
                     #Set constraints for the new node
                     new_node.constraints = copy.deepcopy(current.constraints) #dict1 = dict(dict2)
                     self.addConstraints(new_node, conflicts, pos, t, agent)
-                    
+                    if new_node.constraints in self.const:
+                        continue
+                    self.const.append(new_node.constraints)
                     new_node.solution = copy.copy(current.solution)
 
                     #Find solution

@@ -44,13 +44,14 @@ class OptTailCBS():
     schedule = {}
     finished = False
     count = 0
-    const = []
 
     def __init__(self, grid, agents, tail, agent_dict):
         self.tail = tail
         self.OPEN = PriorityQueue()
         #Root node setup
         root = cbs_node()
+        
+        self.const = []
 
         #Run the low level for all agents
         for agent in agents:
@@ -82,8 +83,8 @@ class OptTailCBS():
                         t1 = c_agents[i][1]
                         other_agent = c_agents[j][0]
                         t2 = c_agents[j][1]
-                        self.addConstraints(new_node, current.solution, 
-                                agent, t1, other_agent, t2)
+                        affected_agent = self.addConstraints(new_node, current.solution, 
+                                agent, t1, other_agent, t2, pos)
                     if new_node.constraints in self.const: 
                         continue
                     self.const.append(new_node.constraints)
@@ -93,26 +94,46 @@ class OptTailCBS():
                     new_node.solution = copy.copy(current.solution)
                     
                     # Find solution taking constraints into account
-                    self.low_level(grid, agent_dict[agent], new_node)                  
+                    self.low_level(grid, agent_dict[affected_agent], new_node)
+                    #print ("path", new_node.solution)
                     valid = True
                     for agent in new_node.solution:
                         if not new_node.solution[agent]:
                             valid = False
                     # Only expand nodes containning path for all agents
                     if valid:
+                        #print ("VALID")
                         self.SIC(new_node) # sum of individual cost of node
                         self.OPEN.put(new_node, new_node.cost)
+
                 
 
     # For a given agent and conflict, add a constraint at the position of
     # conflict that says that the conflicting agent may not step there for as long as
     # the tail remains
-    def addConstraints(self, node, paths, agent, t1, other_agent, t2):
+    def addConstraints(self, node, paths, agent, t1, other_agent, t2, col_pos):
         #print("t/agent/other_agent", t2, agent, other_agent)
-        if t1==0:
-            node.valid = False
         if not agent in node.constraints:
             node.constraints[agent] = {}
+        if not other_agent in node.constraints:
+            node.constraints[other_agent] = {}
+
+        if t1==0:
+            pos = paths[agent][0]
+            time = t2
+            if not pos in node.constraints[other_agent]:
+                node.constraints[other_agent][pos] = []
+            # Add contraints (and make sure contraints doesn't exist already)
+            if not time in [time for time,_ in node.constraints[other_agent][pos]]:
+                node.constraints[other_agent][pos].append((time, ""))
+                #print("%s: (%s, t=%d) cause %s" % (other_agent, pos, time, agent))
+            return other_agent
+            #node.valid = False
+
+        #if t2==0:
+        #    node.valid = False    
+        #    return
+        
         tmp = max(t2,t1) if max(t2,t1)<len(paths[other_agent]) else -1
         if max(t2,t1) < self.tail:
             start = -max(t2,t1)
@@ -122,18 +143,27 @@ class OptTailCBS():
             if tmp+j < 0 :
                 if  len(paths[other_agent]) < abs(j+tmp):
                     continue
-                elif tmp == -1 and j < len(paths[other_agent])-max(t1,t2): 
+                elif tmp == -1 and j == 0 or max(t1,t2)-(abs(start)+j) < len(paths[other_agent]):
                     pos = paths[other_agent][tmp+j]
+                    if j == 0:  
+                        dif = j
+                    else:
+                        dif = j + max(t1,t2)-len(paths[other_agent]) -1
+
                 else:
                     continue
             else:
+                dif = j
                 pos = paths[other_agent][tmp+j]
-            #if tmp+j < 0 and j < len(paths[other_agent])-max(t1,t2):
-            #    continue
-            #pos = paths[other_agent][tmp+j]
-            for i in range(-self.tail, self.tail+1):
-                time = max(t1,t2)+i+j
-                #print ("               time: %d" % time)
+
+            if pos == col_pos:
+                start = -self.tail
+            else:
+                start = 0
+            for i in range(start, self.tail+1):
+                time = max(t1,t2)+i+dif#j
+                if time < max(t1,t2) and not pos == col_pos:
+                    continue
                 if time <= 0:
                     continue
                 if not pos in node.constraints[agent]:
@@ -142,7 +172,7 @@ class OptTailCBS():
                 if not time in [time for time,_ in node.constraints[agent][pos]]:
                     node.constraints[agent][pos].append((time, ""))
                     #print("%s: (%s, t=%d) cause %s" % (agent, pos, time, other_agent))
-   
+        return agent
     # Find a new solution that satisfies the given constraints (astar)
     def low_level(self, grid, agent, node):
         if agent.name in node.constraints:

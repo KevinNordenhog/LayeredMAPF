@@ -5,6 +5,8 @@ from ecbs import ECBS
 from tailcbs import TailCBS
 from Optimizedtailcbs import OptTailCBS
 from post import post
+from component import getComponent
+from component import getBoundedComponent
 import sys
 import time
 from copy import deepcopy
@@ -51,13 +53,22 @@ class Planner:
             elif self.planner == "tailcbs":
                 alg = TailCBS(grid.grid, agent_list, self.delay_tolerance, agents)
                 self.node_cnt = alg.OPEN.i
+                print (self.node_cnt)
             elif self.planner == "otailcbs":
                 alg = OptTailCBS(grid.grid, agent_list, self.delay_tolerance, agents)
                 self.node_cnt = alg.OPEN.i
+                print (self.node_cnt)
             self.schedule = alg.schedule
             self.cost = sic(self.schedule)
             self.delay_tolerance = post(self.schedule)
             print ("New delay tolerance is %d." % self.delay_tolerance)
+            
+            print (self.schedule)
+            print("components:")
+            for agent in self.schedule:
+                comp = getBoundedComponent(self.schedule, agent, 0, 2)
+                print ("agent: ", agent)
+                print ("component: ", comp)
         return self.schedule
     
     # Based on the deviations that occured, the exisiting schedule,

@@ -14,6 +14,7 @@ from copy import deepcopy
 class Planner:
     schedule = {}
     cost = 0
+    makespan = 0
     planner = "Planner not chosen"
     delay_tolerance = sys.maxsize
 
@@ -22,10 +23,10 @@ class Planner:
     time_local = []
     init_schedule = {}
     deviation_count = 0
-    delay_tolerance = 2
 
-    def __init__(self, grid, agents, alg):
+    def __init__(self, grid, agents, alg, tolerance):
         self.planner = alg
+        self.delay_tolerance = tolerance
         time_start = time.time()
         self.globalPlanner(grid, agents)
         self.init_schedule = deepcopy(self.schedule)
@@ -35,7 +36,6 @@ class Planner:
 
     # Find a MAPF plan for the given grid, agents, and algorithm
     def globalPlanner(self, grid, agents):
-        print ("Path finding algorithm is running.")
         agent_list = dict2list(agents)
         # Run algorithn according to input
         if len(agent_list) == 1:
@@ -60,15 +60,18 @@ class Planner:
                 print (self.node_cnt)
             self.schedule = alg.schedule
             self.cost = sic(self.schedule)
+            self.makespan = makespan(self.schedule)
             self.delay_tolerance = post(self.schedule)
+
             print ("New delay tolerance is %d." % self.delay_tolerance)
             
-            print (self.schedule)
-            print("components:")
-            for agent in self.schedule:
-                comp = getBoundedComponent(self.schedule, agent, 0, 2)
-                print ("agent: ", agent)
-                print ("component: ", comp)
+            #print (self.schedule)
+            #print("components:")
+            #for agent in self.schedule:
+            #    comp = getBoundedComponent(self.schedule, agent, 0, 2)
+            #    print ("agent: ", agent)
+            #    print ("component: ", comp)
+
         return self.schedule
     
     # Based on the deviations that occured, the exisiting schedule,
@@ -96,7 +99,7 @@ class Planner:
     # (Local planner is only evaluated if executed)
     def evaluate(self, grid, agents):
         # Global planner evaluation
-        print ("\n----------------------------------")
+        print ("----------------------------------")
         print ("Evaluation (global planner):")
         print ("----------------------------------")
         print ("Planner: %s" % self.planner)
@@ -130,7 +133,7 @@ def dict2list(dictionary):
 # The length of the longest path in schedule
 def makespan(schedule):
     if schedule:
-        return len(max(schedule.values(), key=lambda s: len(s)))
+        return len(max(schedule.values(), key=lambda s: len(s)))-1
     else:
         return -1
 
@@ -138,5 +141,5 @@ def makespan(schedule):
 def sic(schedule):
     s = 0
     for agent in schedule:    
-        s += len(schedule[agent])
+        s += len(schedule[agent])-1
     return s

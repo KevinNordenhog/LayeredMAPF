@@ -22,13 +22,13 @@ from planner import Planner
 
 
 class Simulator:
-    def __init__(self, world, alg):
+    def __init__(self, world, alg, tolerance):
         self.delays = False
         self.delay_probability = 5
         self.dynamic = True if world["map"]["dynamic_obstacles"] else False
         self.grid = Grid(world)        
         self.agents = createagents(world)
-        self.planner = Planner(self.grid, self.agents, alg)
+        self.planner = Planner(self.grid, self.agents, alg, tolerance)
         self.schedule = self.planner.schedule
 
     # Start the simulation, plot the grid and update it continously
@@ -187,10 +187,11 @@ if __name__ == "__main__":
     parser.add_argument("map", help="input file containing map")
     parser.add_argument("alg", help="algorithms: cbs, castar")
     args = parser.parse_args()
+    delay_tolerance = 2
 
 
     with open(args.map) as map_file:
         world = yaml.load(map_file)
     
-    simulator = Simulator(world, args.alg)
+    simulator = Simulator(world, args.alg, delay_tolerance)
     simulator.simulate()

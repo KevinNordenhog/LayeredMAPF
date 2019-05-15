@@ -42,12 +42,11 @@ class cbs_node:
 class TailCBS():
     schedule = {}
     finished = False
-    const = []
 
     def __init__(self, grid, agents, tail, agent_dict):
         self.tail = tail
-        #print ("Finding solutioon with delay tolerance", self.tail)
         self.OPEN = PriorityQueue()
+        self.const = []
         #Root node setup
         root = cbs_node()
 
@@ -59,11 +58,9 @@ class TailCBS():
         self.OPEN.put(root, root.cost)
 
         while not self.OPEN.empty():
-            #print ("Length:", len(self.OPEN.elements))
             current = self.OPEN.get()
             conflicts = self.validate(current)
             if not conflicts:  # Goal reached
-                #print ("\nResults found with cost: %d" % current.cost)
                 self.schedule = current.solution
                 break
             # Set constraints for the new node

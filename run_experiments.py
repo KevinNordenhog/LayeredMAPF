@@ -106,10 +106,10 @@ def test(agents, delay_tolerance, global_planner, genmap):
     avg_runtime = sum(runtime)/len(runtime)
     avg_sic = sum(sic)/len(sic)
     avg_makespan = sum(makespan)/len(makespan)
-    median_nodes = nodes[49]
-    median_runtime = runtime[49]
-    median_sic = sic[49]
-    median_makespan = makespan[49]
+    median_nodes = nodes[int(len(nodes)/2)]
+    median_runtime = runtime[int(len(runtime)/2)]
+    median_sic = sic[int(len(sic)/2)]
+    median_makespan = makespan[int(len(makespan)/2)]
     results = "\n"
     results += "Tolerance: %d\n" % delay_tolerance
     results += "Total time: %.6f\n" % tot_time

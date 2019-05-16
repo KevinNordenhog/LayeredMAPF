@@ -31,7 +31,7 @@ def variance(values):
 def test(agents, delay_tolerance, global_planner, genmap):
     # Test parameters
     test_no = 100
-    size = 16
+    size = "warehouse" # "n" or "warehouse"
     density = 0
     path_map = "results/agents_%d/maps" % agents
     # Generate map
@@ -50,24 +50,24 @@ def test(agents, delay_tolerance, global_planner, genmap):
         path_schedule = "results/agents_%d/schedule_%s" % (agents,s)
     if not os.path.isdir(path_schedule):
         os.mkdir(path_schedule)
-    # Run and evaluate algorithm on 100 maps
+    # Keep track of test results 
     start = time.time()
     runtime = []
     nodes = []
     sic = []
     makespan = []
     failed_tests = 0
+    # Run and evaluate algorithm on 100 maps
     for i in range(test_no):
         # Load map
         with open(path_map + "/map%d.yaml" % i) as map_file:
             world = yaml.load(map_file)
-        # Count time
+        # Count time and stop tests that exceed 5 minutes
         t = time.time()
         test_no += 1
-        # Set timeout to 5min
         signal.signal(signal.SIGALRM, handler)
         signal.alarm(300)
-        # Run algorithm
+        # Path finding
         try:
             print ("\nRunning test %d" % i)
             sim = simulator.Simulator(world, global_planner, delay_tolerance)
@@ -77,7 +77,7 @@ def test(agents, delay_tolerance, global_planner, genmap):
             makespan += [sim.planner.makespan]
             r_time = time.time()-t
             runtime += [r_time]
-            # Save schedule
+            # Save schedule and test statistics
             f = open(path_schedule+"/test_%d"%i, "w")
             schedule = ""
             for a, s in sim.planner.schedule.items():
@@ -89,19 +89,25 @@ def test(agents, delay_tolerance, global_planner, genmap):
                     + "Run-time: %.6f\n" % r_time)
             f.write(data)
             f.close()
-
         except Timeout:
             failed_tests += 1
             print("Took too long (>5 minutes)")
 
+    # Special case when all tests run for over 5min
+    if failed_tests == 100:
+        print ("\n Test passed with 0% success rate")
+        return "Succes rate: 0%"
+
+    # Test has finished
     tot_time = time.time()-start
     print ("\nTest finished.")
     print ("Total time: %.6f" % tot_time)
+    print ("Success rate: %d%%" % (100-failed_tests))
+    # Overview of all 100 instances
     nodes = sorted(nodes)
     sic = sorted(sic)
     makespan = sorted(makespan)
     runtime = sorted(runtime)
-    print ("Successful rate: %d%%" % (100-failed_tests))
     avg_nodes = sum(nodes)/len(nodes)
     avg_runtime = sum(runtime)/len(runtime)
     avg_sic = sum(sic)/len(sic)
@@ -110,10 +116,11 @@ def test(agents, delay_tolerance, global_planner, genmap):
     median_runtime = runtime[int(len(runtime)/2)]
     median_sic = sic[int(len(sic)/2)]
     median_makespan = makespan[int(len(makespan)/2)]
+    # Return a formated overview
     results = "\n"
     results += "Tolerance: %d\n" % delay_tolerance
     results += "Total time: %.6f\n" % tot_time
-    results += "Successful rate: %d%%\n" % (100-failed_tests)
+    results += "Success rate: %d%%\n" % (100-failed_tests)
     results += "Average run-time: %.6f\n" % avg_runtime
     results += "Median run-time: %.6f\n" % median_runtime
     results += "Variance (runtime): %.6f\n" % variance(runtime)
@@ -129,7 +136,7 @@ if __name__ == "__main__":
     agents_min = 3
     agents_max = 13
     tolerance_min = 0
-    tolerance_max = 4
+    tolerance_max = 3
     for agents in range(agents_min, agents_max+1):
         for tolerance in range(tolerance_min, tolerance_max+1):
             if tolerance == 0:

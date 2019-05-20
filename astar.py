@@ -94,19 +94,20 @@ def aStar(grid, start, goal, constraints):
 
 def neighbours(grid, node):
     neigh = []
-    if ((0 <= (node[0]+1) < len(grid)) and (0 <= (node[1]) < len(grid))):
+    width = len(grid) # 21
+    heigth = len(grid[0]) # 20
+    if ((0 <= (node[0]+1) < width) and (0 <= (node[1]) < heigth)):
         if not grid[node[0]+1][node[1]].obstacle:
             neigh.append(((node[0]+1),(node[1]), node[2]))
-    if ((0 <= (node[0]-1) < len(grid)) and (0 <= (node[1]) < len(grid))):
+    if ((0 <= (node[0]-1) < width) and (0 <= (node[1]) < heigth)):
         if not grid[node[0]-1][node[1]].obstacle:
             neigh.append(((node[0]-1),(node[1]), node[2]))
-    if ((0 <= (node[0]) < len(grid)) and (0 <= (node[1]+1) < len(grid))):
+    if ((0 <= (node[0]) < width) and (0 <= (node[1]+1) < heigth)):
         if  not grid[node[0]][node[1]+1].obstacle:
             neigh.append(((node[0]),(node[1]+1), node[2]))
-    if ((0 <= (node[0]) < len(grid)) and (0 <= (node[1]-1) < len(grid))):
+    if ((0 <= (node[0]) < width) and (0 <= (node[1]-1) < heigth)):
         if not grid[node[0]][node[1]-1].obstacle:
             neigh.append(((node[0]),(node[1]-1), node[2]))
-    
     return neigh
 
 #calculated an estimated distance to the goal

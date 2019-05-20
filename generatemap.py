@@ -59,6 +59,55 @@ def create_config(agents, size, density, dynamic_density, probability):
     config = agent_config + map_config
     return config
 
+
+#########################
+# Warehouse config
+#########################
+def create_warehouse(agents):
+    ###################
+    # Map configuration
+    ###################
+    map_config = "map:\n"
+    map_config += "    dimensions: [20, 20]\n"
+    map_config += "    obstacles:\n"
+    # Generate warehouse obstacles
+    positions = [(2,2), (2,6), (2,11), (2,15),
+            (6,2), (6,6), (6,11), (6,15), 
+            (11,2), (11,6), (11,11), (11,15),
+            (15,2), (15,6), (15,11), (15,15)]
+    obstacles = []
+    for x, y in positions:
+        for i in range (0,3):
+            for j in range(0,3):
+                obstacles += [(x+i, y+j)]
+    for obs in obstacles:
+        map_config += "    - !!python/tuple [%d, %d]\n" % (obs[0], obs[1])
+    map_config += "    dynamic_obstacles:\n"
+    # Generate agents
+    agent_config = "agents:\n"
+    a_goals = []
+    a_start = []
+    for agent in range(agents):
+        pos_found = False
+        while not pos_found:
+            size = 20
+            goal = (random.randint(0,size-1), random.randint(0,size-1))
+            start = (random.randint(0,size-1), random.randint(0,size-1))
+            pos_found = not (
+                    start in a_start 
+                    or goal in a_goals
+                    or start in obstacles
+                    or goal in obstacles)
+        a_goals += [goal]
+        a_start += [start]
+        agent_config += "-   goal: [%d, %d]\n" %  (goal[0], goal[1])
+        agent_config += "    name: agent%d\n" % (agent)
+        agent_config += "    start: [%d, %d]\n" % (start[0], start[1])
+    # Return config
+    config = agent_config + map_config
+    return config
+
+
 #########################
 # Output map to file
 #########################
@@ -70,7 +119,10 @@ def save_map(config, name):
 # Generate map based on input and save to maps/ folder
 #########################
 def gen_map(size, density, agents, dynamic_density, probability):
-    config = create_config(agents, size, density, dynamic_density, probability)
+    if size == "warehouse":
+        config = create_warehouse(agents)
+    else:
+        config = create_config(agents, size, density, dynamic_density, probability)
     return config
 
 #########################

@@ -39,7 +39,7 @@ def getBoundedComponent(schedule, agent, start, bound):
             for c in component:
                 for i in range(t, t+bound+1):
                     if i >= len(schedule[c]):
-                        i = -1#len(schedule[c])-1
+                        i = len(schedule[c])-1 #-1
                     positions[schedule[c][i]] = [[c, i]]
             # The position of each agent and their tails at time t
             for other_agent in schedule:

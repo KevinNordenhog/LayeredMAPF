@@ -63,15 +63,6 @@ class Planner:
             self.makespan = makespan(self.schedule)
             self.delay_tolerance = post(self.schedule)
 
-            print ("New delay tolerance is %d." % self.delay_tolerance)
-            
-            #print (self.schedule)
-            #print("components:")
-            #for agent in self.schedule:
-            #    comp = getBoundedComponent(self.schedule, agent, 0, 2)
-            #    print ("agent: ", agent)
-            #    print ("component: ", comp)
-
         return self.schedule
     
     # Based on the deviations that occured, the exisiting schedule,

@@ -67,6 +67,8 @@ def addPos(positions,  schedule, agent, t, bound):
         if time >= len(schedule[agent]):
             time = t
             pos = len(schedule[agent])-1
+        if pos < 0:
+            continue
         if schedule[agent][pos] in positions:
             c = [x for x,_ in positions[schedule[agent][pos]]] # agent
             n = [x for _,x in positions[schedule[agent][pos]]] # time

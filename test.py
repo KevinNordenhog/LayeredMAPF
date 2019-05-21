@@ -15,6 +15,6 @@ if __name__ == "__main__":
     generatemap.save_map(map_config, "maps/test_map.yaml")
     world = yaml.load(map_config)
 
-    sim = simulator.Simulator(world, global_planner)
+    sim = simulator.Simulator(world, global_planner, 2)
     sim.delays = False
     sim.simulate()

@@ -68,12 +68,17 @@ class Planner:
 
             print ("New delay tolerance is %d." % self.delay_tolerance)
             
-            #print (self.schedule)
+            print (self.schedule)
             #print("components:")
-            #for agent in self.schedule:
-            #    comp = getBoundedComponent(self.schedule, agent, 0, 2)
-            #    print ("agent: ", agent)
-            #    print ("component: ", comp)
+            if self.stalling:
+                for agent in self.schedule:
+                    agents[agent].stall = 0
+                    agents[agent].delay = 0
+                    agents[agent].iswaiting = False
+                    
+                    #comp = getBoundedComponent(self.schedule, agent, 0, self.stalling_bound)
+                    #print ("agent: ", agent)
+                    #print ("component: ", comp)
 
         return self.schedule
     
@@ -102,11 +107,10 @@ class Planner:
                     self.globalPlanner(grid, agents)
                     time_planner = time.time()-time_start
                     self.time_local += [time_planner]
-                    #recompute = True
-                    break
+                    return True
         if not recompute:
             print ("The delay can be tolerated.")
-            #print (self.schedule)
+            return False
 
     def stallComponent(self, deviations, agents, stalled_agents, agent):
         if self.stalling and not deviations == []:

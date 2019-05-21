@@ -92,7 +92,7 @@ class CBS():
         if conflicts[pos,t][1] == []:
             if agent in node.constraints:
                 if pos in node.constraints[agent]:
-                    if t not in node.constraints[agent][pos]:
+                    if t not in node.constraints[agent][pos][0]:
                         node.constraints[agent][pos].append((t,""))
                 else:
                     node.constraints[agent][pos] = [(t,"")]

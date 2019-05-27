@@ -60,11 +60,9 @@ class Planner:
             elif self.planner == "tailcbs":
                 alg = TailCBS(grid.grid, agent_list, self.delay_tolerance, agents)
                 self.node_cnt = alg.OPEN.i
-                print (self.node_cnt)
             elif self.planner == "otailcbs":
                 alg = OptTailCBS(grid.grid, agent_list, self.delay_tolerance, agents)
                 self.node_cnt = alg.OPEN.i
-                print (self.node_cnt)
             self.schedule = alg.schedule
             self.cost = sic(self.schedule)
             self.makespan = makespan(self.schedule)
@@ -111,7 +109,6 @@ class Planner:
                     self.no_recalc += 1
                     return True
         if not recompute:
-            #print ("The delay can be tolerated.")
             if addStall:
                 self.no_stalls += 1
             return False
@@ -127,7 +124,6 @@ class Planner:
             for a in comp:
                 #We do not want to stall any agents more than once
                 if not a in stalled_agents and not a in deviations:
-                    #print ("Stalled agent: ", a)
                     agents[a].stall += 1
                     self.schedule[a].insert(0, agents[a].pos)
                     stalled_agents.append(a)

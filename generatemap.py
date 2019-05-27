@@ -64,21 +64,21 @@ def create_config(agents, size, density, dynamic_density, probability):
 # Warehouse config
 #########################
 def create_warehouse(agents):
+    rows = 20
+    cols = 21
     ###################
     # Map configuration
     ###################
     map_config = "map:\n"
-    map_config += "    dimensions: [20, 20]\n"
+    map_config += "    dimensions: [%d, %d]\n" % (rows, cols)
     map_config += "    obstacles:\n"
     # Generate warehouse obstacles
-    positions = [(2,2), (2,6), (2,11), (2,15),
-            (6,2), (6,6), (6,11), (6,15), 
-            (11,2), (11,6), (11,11), (11,15),
-            (15,2), (15,6), (15,11), (15,15)]
+    positions = [(2,2), (5,2), (8,2), (11,2), (14,2), (17,2),
+            (2,11), (5,11), (8,11), (11,11), (14,11), (17,11)]
     obstacles = []
     for x, y in positions:
-        for i in range (0,3):
-            for j in range(0,3):
+        for i in range (2):
+            for j in range(7):
                 obstacles += [(x+i, y+j)]
     for obs in obstacles:
         map_config += "    - !!python/tuple [%d, %d]\n" % (obs[0], obs[1])
@@ -90,9 +90,8 @@ def create_warehouse(agents):
     for agent in range(agents):
         pos_found = False
         while not pos_found:
-            size = 20
-            goal = (random.randint(0,size-1), random.randint(0,size-1))
-            start = (random.randint(0,size-1), random.randint(0,size-1))
+            goal = (random.randint(0,cols-1), random.randint(0,rows-1))
+            start = (random.randint(0,cols-1), random.randint(0,rows-1))
             pos_found = not (
                     start in a_start 
                     or goal in a_goals

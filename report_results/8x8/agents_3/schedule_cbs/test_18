@@ -1,0 +1,10 @@
+Schedule:
+ agent0: [(4, 2), (3, 2), (3, 1)]
+agent1: [(7, 3), (6, 3), (6, 2)]
+agent2: [(3, 4), (3, 3), (3, 2)]
+
+
+Nodes: 1
+SIC: 6
+Makespan: 2
+Run-time: 0.000289

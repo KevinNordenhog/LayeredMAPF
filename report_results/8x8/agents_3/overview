@@ -1,0 +1,52 @@
+
+Tolerance: 0
+Total time: 300.278492
+Successful rate: 99%
+Average run-time: 0.000616
+Median run-time: 0.000496
+Variance (runtime): 0.000325
+Average generated nodes: 2
+Median generated nodes: 1
+Average sic: 16.22
+Median sic: 16.00
+Average makespan: 7.98
+Median makespan: 8.00
+
+Tolerance: 1
+Total time: 0.319198
+Successful rate: 100%
+Average run-time: 0.001410
+Median run-time: 0.000600
+Variance (runtime): 0.002347
+Average generated nodes: 5
+Median generated nodes: 2
+Average sic: 16.26
+Median sic: 16.00
+Average makespan: 8.02
+Median makespan: 8.00
+
+Tolerance: 2
+Total time: 0.654436
+Successful rate: 100%
+Average run-time: 0.004773
+Median run-time: 0.000805
+Variance (runtime): 0.014958
+Average generated nodes: 15
+Median generated nodes: 3
+Average sic: 16.44
+Median sic: 17.00
+Average makespan: 8.13
+Median makespan: 8.00
+
+Tolerance: 3
+Total time: 2.618009
+Successful rate: 100%
+Average run-time: 0.024336
+Median run-time: 0.001356
+Variance (runtime): 0.108992
+Average generated nodes: 49
+Median generated nodes: 3
+Average sic: 16.67
+Median sic: 17.00
+Average makespan: 8.31
+Median makespan: 8.00

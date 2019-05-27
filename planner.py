@@ -19,13 +19,15 @@ class Planner:
     delay_tolerance = sys.maxsize
     stalling = True
     #stalling = False
-    stalling_bound = 4
+    stalling_bound = 3
 
     # Evaluation data
     time_global = 0
     time_local = []
     init_schedule = {}
     deviation_count = 0
+    no_stalls = 0
+    local = False
 
     def __init__(self, grid, agents, alg, tolerance):
         self.planner = alg
@@ -83,12 +85,15 @@ class Planner:
         #    self.globalPlanner(grid, agents)
         #    return
         # Check if delay is small enough to skip recomputation
+        self.local = True
+        addStall = False
         recompute = False
         self.deviation_count += len(deviations)
         stalled_agents = []
         for agent in deviations:
             if agents[agent].delay > self.delay_tolerance:
                 if self.stalling:
+                    addStall = True
                     self.stallComponent(deviations, agents, stalled_agents, agent)
                     for a in agents:
                         if agents[a].stall > self.stalling_bound and not self.stalling_bound == 0:
@@ -100,9 +105,13 @@ class Planner:
                     self.globalPlanner(grid, agents)
                     time_planner = time.time()-time_start
                     self.time_local += [time_planner]
+                    if addStall:
+                        self.no_stalls += 1
                     return True
         if not recompute:
             print ("The delay can be tolerated.")
+            if addStall:
+                self.no_stalls += 1
             return False
 
     def stallComponent(self, deviations, agents, stalled_agents, agent):
@@ -140,7 +149,7 @@ class Planner:
         print ("Delay tolerance: %d" % (post(self.init_schedule)))
         print ("----------------------------------")
         # Local planner evaluation
-        if self.time_local:
+        if self.local:
             print ("\n----------------------------------")
             print ("Evaluation (local planner):")
             print ("----------------------------------")
@@ -148,6 +157,7 @@ class Planner:
             print ("Total excution time: %f" % sum(self.time_local))
             print ("Number of deviations: %d" % self.deviation_count)
             print ("Local planner executions: %d" % len(self.time_local))
+            print ("Number of stalls: %d" % self.no_stalls)
             print ("----------------------------------")
             
     

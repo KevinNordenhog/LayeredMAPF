@@ -23,8 +23,6 @@ from planner import Planner
 
 class Simulator:
     def __init__(self, world, alg, tolerance):
-        self.delays = False
-        self.delay_probability = 5
         self.dynamic = True if world["map"]["dynamic_obstacles"] else False
         self.grid = Grid(world)        
         self.agents = createagents(world)
@@ -32,16 +30,46 @@ class Simulator:
         self.schedule = self.planner.schedule
 
     # Start the simulation, plot the grid and update it continously
-    def simulate(self):
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, aspect='equal')
-        self.createfig()
-        plt.xlim(0, self.grid.heigth)
-        plt.ylim(0, self.grid.width)
-        self.rendercount = 0
+    def simulate(self, delays, animate, prob_delay):
+        self.delays = delays
+        self.animate = animate
+        self.delay_probability = prob_delay
         self.stepcount = 0
-        ani = animation.FuncAnimation(self.fig, self.update, interval=50)
-        plt.show()
+        if self.animate:
+            self.fig = plt.figure()
+            self.ax = self.fig.add_subplot(111, aspect='equal')
+            self.createfig()
+            self.rendercount = 0
+            plt.xlim(0, self.grid.heigth)
+            plt.ylim(0, self.grid.width)
+            ani = animation.FuncAnimation(self.fig, self.update, interval=50)
+            plt.show()
+        # Used for testing without graphical interface
+        else:
+            while not simulation_finished(self.agents):
+                # Create deviations
+                deviations = self.deviate()
+                if deviations:
+                    recalc = self.planner.localplanner(deviations, self.grid, self.agents)
+                    if recalc:
+                        self.schedule = self.planner.schedule
+                self.stepcount += 1
+                # Move agents
+                for agent in self.agents.values():
+                    if (agent.pos == agent.goal and 
+                            not self.schedule[agent.name]):
+                        continue
+                    curr = agent.pos
+                    nxt = self.schedule[agent.name][0]
+                    self.grid.grid[agent.x][agent.y].occupied = False
+                    agent.pos = nxt
+                    agent.x, agent.y = agent.pos[0], agent.pos[1]
+                    self.grid.grid[agent.x][agent.y].occupied = True
+                    agent.step += 1
+                    self.schedule[agent.name].pop(0)
+            
+            # Goal reached, evaluate performance
+            self.planner.evaluate(self.grid, self.agents)
 
     # Create deviations and run local planner if necessary,
     # then move agents and update figure
@@ -52,8 +80,9 @@ class Simulator:
         if (self.rendercount % 10) == 0:
             deviations = self.deviate()
             if deviations:
-                print ("\nDeviation occured on time %s at %s." % (self.stepcount,deviations))
-                self.planner.localplanner(deviations, self.grid, self.agents)
+                recalc = self.planner.localplanner(deviations, self.grid, self.agents)
+                if recalc:
+                    self.schedule = self.planner.schedule
                 self.createfig()
             self.stepcount += 1
         self.updatefig()
@@ -187,11 +216,14 @@ if __name__ == "__main__":
     parser.add_argument("map", help="input file containing map")
     parser.add_argument("alg", help="algorithms: cbs, castar")
     args = parser.parse_args()
-    delay_tolerance = 2
+    delays = True   # If delays should be present
+    prob_delay = 10  # Percentage of delay at each step
+    animate = True  # If simulation should be animated
+    delay_tolerance = 1
 
 
     with open(args.map) as map_file:
         world = yaml.load(map_file)
     
     simulator = Simulator(world, args.alg, delay_tolerance)
-    simulator.simulate()
+    simulator.simulate(delays, animate, prob_delay)

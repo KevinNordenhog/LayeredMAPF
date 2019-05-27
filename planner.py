@@ -17,12 +17,19 @@ class Planner:
     makespan = 0
     planner = "Planner not chosen"
     delay_tolerance = sys.maxsize
+    stalling = True
+    #stalling = False
+    stalling_bound = 2
 
     # Evaluation data
     time_global = 0
     time_local = []
     init_schedule = {}
     deviation_count = 0
+    tot_deviations = 0
+    no_stalls = 0
+    no_recalc = 0
+    local = False
 
     def __init__(self, grid, agents, alg, tolerance):
         self.planner = alg
@@ -53,47 +60,74 @@ class Planner:
             elif self.planner == "tailcbs":
                 alg = TailCBS(grid.grid, agent_list, self.delay_tolerance, agents)
                 self.node_cnt = alg.OPEN.i
-                print (self.node_cnt)
             elif self.planner == "otailcbs":
                 alg = OptTailCBS(grid.grid, agent_list, self.delay_tolerance, agents)
                 self.node_cnt = alg.OPEN.i
-                print (self.node_cnt)
             self.schedule = alg.schedule
             self.cost = sic(self.schedule)
             self.makespan = makespan(self.schedule)
             self.delay_tolerance = post(self.schedule)
 
-            print ("New delay tolerance is %d." % self.delay_tolerance)
-            
-            #print (self.schedule)
-            #print("components:")
-            #for agent in self.schedule:
-            #    comp = getBoundedComponent(self.schedule, agent, 0, 2)
-            #    print ("agent: ", agent)
-            #    print ("component: ", comp)
-
+            # Reset parameters when stalling
+            if self.stalling:
+                for agent in self.schedule:
+                    agents[agent].stall = 0
+                    agents[agent].delay = 0
+                    agents[agent].iswaiting = False
+                    
         return self.schedule
     
     # Based on the deviations that occured, the exisiting schedule,
     # and the current state of the map, find a new plan
     def localplanner(self, deviations, grid, agents):
         # If the map has changed, 
-        if dynamic:
-            self.globalPlanner(grid, agents)
-            return
+        #if dynamic: TODO:
+        #    self.globalPlanner(grid, agents)
+        #    return
         # Check if delay is small enough to skip recomputation
+        self.local = True
+        addStall = False
         recompute = False
-        self.deviation_count += len(deviations)
+        self.tot_deviations += len(deviations)
+        self.deviation_count += 1
+        stalled_agents = []
         for agent in deviations:
             if agents[agent].delay > self.delay_tolerance:
-                time_start = time.time()
-                self.globalPlanner(grid, agents)
-                time_planner = time.time()-time_start
-                self.time_local += [time_planner]
-                recompute = True
-                break
+                if self.stalling:
+                    addStall = True
+                    self.stallComponent(deviations, agents, stalled_agents, agent)
+                    for a in agents:
+                        if agents[a].stall > self.stalling_bound and not self.stalling_bound == 0:
+                            recompute = True 
+                else:
+                    recompute = True
+                if recompute:
+                    time_start = time.time()
+                    self.globalPlanner(grid, agents)
+                    time_planner = time.time()-time_start
+                    self.time_local += [time_planner]
+                    self.no_recalc += 1
+                    return True
         if not recompute:
-            print ("The delay can be tolerated.")
+            if addStall:
+                self.no_stalls += 1
+            return False
+
+    def stallComponent(self, deviations, agents, stalled_agents, agent):
+        if self.stalling and not deviations == []:
+            if agent in stalled_agents:
+                return            
+            if self.stalling_bound > 0:
+                comp = getBoundedComponent(self.schedule, agent, 0, self.stalling_bound)
+            else:
+                comp = getComponent(self.schedule, agent, 0)            
+            for a in comp:
+                #We do not want to stall any agents more than once
+                if not a in stalled_agents and not a in deviations:
+                    agents[a].stall += 1
+                    self.schedule[a].insert(0, agents[a].pos)
+                    stalled_agents.append(a)
+
     
     # Evaluate the execution
     # (Local planner is only evaluated if executed)
@@ -111,16 +145,26 @@ class Planner:
         print ("Delay tolerance: %d" % (post(self.init_schedule)))
         print ("----------------------------------")
         # Local planner evaluation
-        if self.time_local:
+        if self.local:
+            tot_makespan = 0
+            tot_sic = 0
+            for name, agent in agents.items():
+                tot_sic += agent.step - 1
+                if agent.step > tot_makespan:
+                    tot_makespan = agent.step - 1
             print ("\n----------------------------------")
             print ("Evaluation (local planner):")
             print ("----------------------------------")
             print ("Planner: delay tolerance")
             print ("Total excution time: %f" % sum(self.time_local))
             print ("Number of deviations: %d" % self.deviation_count)
+            print ("Total number of deviation: %d" % self.tot_deviations)
             print ("Local planner executions: %d" % len(self.time_local))
+            print ("Total makespan: %d" % tot_makespan)
+            print ("Total sum of individual cost: %d" % tot_sic)
+            print ("Number of stalls: %d" % self.no_stalls)
+            print ("Number of recalculations: %d" % self.no_recalc)
             print ("----------------------------------")
-            
     
 
 # Put the values in the dictionary into a list

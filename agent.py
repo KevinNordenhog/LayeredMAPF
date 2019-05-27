@@ -11,3 +11,4 @@ class Agent:
         self.rendercount = 0
         self.iswaiting = False
         self.delay = 0
+        self.stall = 0

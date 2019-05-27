@@ -19,7 +19,7 @@ class Planner:
     delay_tolerance = sys.maxsize
     stalling = True
     #stalling = False
-    stalling_bound = 3
+    stalling_bound = 2
 
     # Evaluation data
     time_global = 0
@@ -28,6 +28,7 @@ class Planner:
     deviation_count = 0
     tot_deviations = 0
     no_stalls = 0
+    no_recalc = 0
     local = False
 
     def __init__(self, grid, agents, alg, tolerance):
@@ -107,11 +108,10 @@ class Planner:
                     self.globalPlanner(grid, agents)
                     time_planner = time.time()-time_start
                     self.time_local += [time_planner]
-                    if addStall:
-                        self.no_stalls += 1
+                    self.no_recalc += 1
                     return True
         if not recompute:
-            print ("The delay can be tolerated.")
+            #print ("The delay can be tolerated.")
             if addStall:
                 self.no_stalls += 1
             return False
@@ -120,8 +120,6 @@ class Planner:
         if self.stalling and not deviations == []:
             if agent in stalled_agents:
                 return            
-            #agents[agent].stall += 1
-            #stalled_agents.append(agent)
             if self.stalling_bound > 0:
                 comp = getBoundedComponent(self.schedule, agent, 0, self.stalling_bound)
             else:
@@ -129,7 +127,7 @@ class Planner:
             for a in comp:
                 #We do not want to stall any agents more than once
                 if not a in stalled_agents and not a in deviations:
-                    print ("Stalled agent: ", a)
+                    #print ("Stalled agent: ", a)
                     agents[a].stall += 1
                     self.schedule[a].insert(0, agents[a].pos)
                     stalled_agents.append(a)
@@ -169,6 +167,7 @@ class Planner:
             print ("Total makespan: %d" % tot_makespan)
             print ("Total sum of individual cost: %d" % tot_sic)
             print ("Number of stalls: %d" % self.no_stalls)
+            print ("Number of recalculations: %d" % self.no_recalc)
             print ("----------------------------------")
     
 

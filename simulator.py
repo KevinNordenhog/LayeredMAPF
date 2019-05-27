@@ -23,7 +23,7 @@ from planner import Planner
 
 class Simulator:
     def __init__(self, world, alg, tolerance):
-        self.delays = False
+        self.delays = True
         self.delay_probability = 5
         self.dynamic = True if world["map"]["dynamic_obstacles"] else False
         self.grid = Grid(world)        
@@ -53,7 +53,9 @@ class Simulator:
             deviations = self.deviate()
             if deviations:
                 print ("\nDeviation occured on time %s at %s." % (self.stepcount,deviations))
-                self.planner.localplanner(deviations, self.grid, self.agents)
+                recalc = self.planner.localplanner(deviations, self.grid, self.agents)
+                if recalc:
+                    self.schedule = self.planner.schedule
                 self.createfig()
             self.stepcount += 1
         self.updatefig()
@@ -187,7 +189,7 @@ if __name__ == "__main__":
     parser.add_argument("map", help="input file containing map")
     parser.add_argument("alg", help="algorithms: cbs, castar")
     args = parser.parse_args()
-    delay_tolerance = 2
+    delay_tolerance = 1
 
 
     with open(args.map) as map_file:

@@ -17,6 +17,9 @@ class Planner:
     makespan = 0
     planner = "Planner not chosen"
     delay_tolerance = sys.maxsize
+    stalling = True
+    #stalling = False
+    stalling_bound = 4
 
     # Evaluation data
     time_global = 0
@@ -63,28 +66,63 @@ class Planner:
             self.makespan = makespan(self.schedule)
             self.delay_tolerance = post(self.schedule)
 
+            # Reset parameters when stalling
+            if self.stalling:
+                for agent in self.schedule:
+                    agents[agent].stall = 0
+                    agents[agent].delay = 0
+                    agents[agent].iswaiting = False
+                    
         return self.schedule
     
     # Based on the deviations that occured, the exisiting schedule,
     # and the current state of the map, find a new plan
     def localplanner(self, deviations, grid, agents):
         # If the map has changed, 
-        if dynamic:
-            self.globalPlanner(grid, agents)
-            return
+        #if dynamic: TODO:
+        #    self.globalPlanner(grid, agents)
+        #    return
         # Check if delay is small enough to skip recomputation
         recompute = False
         self.deviation_count += len(deviations)
+        stalled_agents = []
         for agent in deviations:
             if agents[agent].delay > self.delay_tolerance:
-                time_start = time.time()
-                self.globalPlanner(grid, agents)
-                time_planner = time.time()-time_start
-                self.time_local += [time_planner]
-                recompute = True
-                break
+                if self.stalling:
+                    self.stallComponent(deviations, agents, stalled_agents, agent)
+                    for a in agents:
+                        if agents[a].stall > self.stalling_bound and not self.stalling_bound == 0:
+                            recompute = True 
+                else:
+                    recompute = True
+                if recompute:
+                    time_start = time.time()
+                    self.globalPlanner(grid, agents)
+                    time_planner = time.time()-time_start
+                    self.time_local += [time_planner]
+                    return True
         if not recompute:
             print ("The delay can be tolerated.")
+            return False
+
+    def stallComponent(self, deviations, agents, stalled_agents, agent):
+        if self.stalling and not deviations == []:
+            if agent in stalled_agents:
+                return            
+            #agents[agent].stall += 1
+            #stalled_agents.append(agent)
+            if self.stalling_bound > 0:
+                comp = getBoundedComponent(self.schedule, agent, 0, self.stalling_bound)
+            else:
+                comp = getComponent(self.schedule, agent, 0)            
+            for a in comp:
+                #We do not want to stall any agents more than once
+                if not a in stalled_agents and not a in deviations:
+                    print ("Stalled agent: ", a)
+                    agents[a].stall += 1
+                    self.schedule[a].insert(0, agents[a].pos)
+                    stalled_agents.append(a)
+
     
     # Evaluate the execution
     # (Local planner is only evaluated if executed)

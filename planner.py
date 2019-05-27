@@ -151,9 +151,11 @@ class Planner:
         # Local planner evaluation
         if self.local:
             tot_makespan = 0
+            tot_sic = 0
             for name, agent in agents.items():
+                tot_sic += agent.step - 1
                 if agent.step > tot_makespan:
-                    tot_makespan = agent.step
+                    tot_makespan = agent.step - 1
             print ("\n----------------------------------")
             print ("Evaluation (local planner):")
             print ("----------------------------------")
@@ -162,6 +164,7 @@ class Planner:
             print ("Number of deviations: %d" % self.deviation_count)
             print ("Local planner executions: %d" % len(self.time_local))
             print ("Total makespan: %d" % tot_makespan)
+            print ("Total sum of individual cost: %d" % tot_sic)
             print ("Number of stalls: %d" % self.no_stalls)
             print ("----------------------------------")
     

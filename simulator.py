@@ -23,8 +23,8 @@ from planner import Planner
 
 class Simulator:
     def __init__(self, world, alg, tolerance):
-        self.delays = True
-        self.animate = False
+        self.delays = False
+        self.animate = True
         self.delay_probability = 5
         self.dynamic = True if world["map"]["dynamic_obstacles"] else False
         self.grid = Grid(world)        
@@ -50,7 +50,6 @@ class Simulator:
                 # Create deviations
                 deviations = self.deviate()
                 if deviations:
-                    print ("\nDeviation occured on time %s at %s." % (self.stepcount,deviations))
                     recalc = self.planner.localplanner(deviations, self.grid, self.agents)
                     if recalc:
                         self.schedule = self.planner.schedule
@@ -81,7 +80,6 @@ class Simulator:
         if (self.rendercount % 10) == 0:
             deviations = self.deviate()
             if deviations:
-                print ("\nDeviation occured on time %s at %s." % (self.stepcount,deviations))
                 recalc = self.planner.localplanner(deviations, self.grid, self.agents)
                 if recalc:
                     self.schedule = self.planner.schedule

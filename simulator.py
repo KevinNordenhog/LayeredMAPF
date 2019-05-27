@@ -23,9 +23,6 @@ from planner import Planner
 
 class Simulator:
     def __init__(self, world, alg, tolerance):
-        self.delays = False
-        self.animate = True
-        self.delay_probability = 5
         self.dynamic = True if world["map"]["dynamic_obstacles"] else False
         self.grid = Grid(world)        
         self.agents = createagents(world)
@@ -33,7 +30,10 @@ class Simulator:
         self.schedule = self.planner.schedule
 
     # Start the simulation, plot the grid and update it continously
-    def simulate(self):
+    def simulate(self, delays, animate, prob_delay):
+        self.delays = delays
+        self.animate = animate
+        self.delay_probability = prob_delay
         self.stepcount = 0
         if self.animate:
             self.fig = plt.figure()
@@ -216,6 +216,9 @@ if __name__ == "__main__":
     parser.add_argument("map", help="input file containing map")
     parser.add_argument("alg", help="algorithms: cbs, castar")
     args = parser.parse_args()
+    delays = True   # If delays should be present
+    prob_delay = 10  # Percentage of delay at each step
+    animate = True  # If simulation should be animated
     delay_tolerance = 1
 
 
@@ -223,4 +226,4 @@ if __name__ == "__main__":
         world = yaml.load(map_file)
     
     simulator = Simulator(world, args.alg, delay_tolerance)
-    simulator.simulate()
+    simulator.simulate(delays, animate, prob_delay)

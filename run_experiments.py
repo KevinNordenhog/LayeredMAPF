@@ -34,6 +34,9 @@ def test(agents, delay_tolerance, global_planner, genmap):
     size = "warehouse" # "n" or "warehouse"
     density = 0
     path_map = "results/agents_%d/maps" % agents
+    delay_toggle = True
+    prob_delay = 5
+    animate = False
     # Generate map
     if genmap:
         if not os.path.isdir(path_map):
@@ -71,6 +74,7 @@ def test(agents, delay_tolerance, global_planner, genmap):
         try:
             print ("\nRunning test %d" % i)
             sim = simulator.Simulator(world, global_planner, delay_tolerance)
+            sim.simulate(delay_toggle, animate, prob_delay)
             # Save runtime data
             nodes += [sim.planner.node_cnt]
             sic += [sim.planner.cost]
@@ -134,7 +138,7 @@ def test(agents, delay_tolerance, global_planner, genmap):
 
 if __name__ == "__main__":
     agents_min = 3
-    agents_max = 13
+    agents_max = 52
     tolerance_min = 0
     tolerance_max = 3
     for agents in range(agents_min, agents_max+1):

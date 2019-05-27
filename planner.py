@@ -26,6 +26,7 @@ class Planner:
     time_local = []
     init_schedule = {}
     deviation_count = 0
+    tot_deviations = 0
     no_stalls = 0
     local = False
 
@@ -88,7 +89,8 @@ class Planner:
         self.local = True
         addStall = False
         recompute = False
-        self.deviation_count += len(deviations)
+        self.tot_deviations += len(deviations)
+        self.deviation_count += 1
         stalled_agents = []
         for agent in deviations:
             if agents[agent].delay > self.delay_tolerance:
@@ -162,6 +164,7 @@ class Planner:
             print ("Planner: delay tolerance")
             print ("Total excution time: %f" % sum(self.time_local))
             print ("Number of deviations: %d" % self.deviation_count)
+            print ("Total number of deviation: %d" % self.tot_deviations)
             print ("Local planner executions: %d" % len(self.time_local))
             print ("Total makespan: %d" % tot_makespan)
             print ("Total sum of individual cost: %d" % tot_sic)

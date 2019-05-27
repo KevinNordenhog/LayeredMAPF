@@ -24,6 +24,7 @@ from planner import Planner
 class Simulator:
     def __init__(self, world, alg, tolerance):
         self.delays = True
+        self.animate = False
         self.delay_probability = 5
         self.dynamic = True if world["map"]["dynamic_obstacles"] else False
         self.grid = Grid(world)        
@@ -33,15 +34,43 @@ class Simulator:
 
     # Start the simulation, plot the grid and update it continously
     def simulate(self):
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, aspect='equal')
-        self.createfig()
-        plt.xlim(0, self.grid.heigth)
-        plt.ylim(0, self.grid.width)
-        self.rendercount = 0
         self.stepcount = 0
-        ani = animation.FuncAnimation(self.fig, self.update, interval=50)
-        plt.show()
+        if self.animate:
+            self.fig = plt.figure()
+            self.ax = self.fig.add_subplot(111, aspect='equal')
+            self.createfig()
+            self.rendercount = 0
+            plt.xlim(0, self.grid.heigth)
+            plt.ylim(0, self.grid.width)
+            ani = animation.FuncAnimation(self.fig, self.update, interval=50)
+            plt.show()
+        # Used for testing without graphical interface
+        else:
+            while not simulation_finished(self.agents):
+                # Create deviations
+                deviations = self.deviate()
+                if deviations:
+                    print ("\nDeviation occured on time %s at %s." % (self.stepcount,deviations))
+                    recalc = self.planner.localplanner(deviations, self.grid, self.agents)
+                    if recalc:
+                        self.schedule = self.planner.schedule
+                self.stepcount += 1
+                # Move agents
+                for agent in self.agents.values():
+                    if (agent.pos == agent.goal and 
+                            not self.schedule[agent.name]):
+                        continue
+                    curr = agent.pos
+                    nxt = self.schedule[agent.name][0]
+                    self.grid.grid[agent.x][agent.y].occupied = False
+                    agent.pos = nxt
+                    agent.x, agent.y = agent.pos[0], agent.pos[1]
+                    self.grid.grid[agent.x][agent.y].occupied = True
+                    agent.step += 1
+                    self.schedule[agent.name].pop(0)
+            
+            # Goal reached, evaluate performance
+            self.planner.evaluate(self.grid, self.agents)
 
     # Create deviations and run local planner if necessary,
     # then move agents and update figure

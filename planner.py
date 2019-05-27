@@ -141,6 +141,10 @@ class Planner:
         print ("----------------------------------")
         # Local planner evaluation
         if self.time_local:
+            tot_makespan = 0
+            for agent in agents:
+                if agent.step > tot_makespan:
+                    tot_makespan = agent.step
             print ("\n----------------------------------")
             print ("Evaluation (local planner):")
             print ("----------------------------------")
@@ -148,7 +152,9 @@ class Planner:
             print ("Total excution time: %f" % sum(self.time_local))
             print ("Number of deviations: %d" % self.deviation_count)
             print ("Local planner executions: %d" % len(self.time_local))
+            print ("Total makespan: %d" % tot_makespan)
             print ("----------------------------------")
+            time.sleep(5)
             
     
 

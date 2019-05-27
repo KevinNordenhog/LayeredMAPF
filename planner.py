@@ -151,7 +151,7 @@ class Planner:
         # Local planner evaluation
         if self.local:
             tot_makespan = 0
-            for agent in agents:
+            for name, agent in agents.items():
                 if agent.step > tot_makespan:
                     tot_makespan = agent.step
             print ("\n----------------------------------")

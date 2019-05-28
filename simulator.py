@@ -28,6 +28,9 @@ class Simulator:
         self.agents = createagents(world)
         self.planner = Planner(self.grid, self.agents, alg, tolerance)
         self.schedule = self.planner.schedule
+        self.paths = {}
+        for agent in self.agents:
+            self.paths[agent] = [self.agents[agent].pos]
 
     # Start the simulation, plot the grid and update it continously
     def simulate(self, delays, animate, prob_delay):
@@ -66,6 +69,7 @@ class Simulator:
                     agent.x, agent.y = agent.pos[0], agent.pos[1]
                     self.grid.grid[agent.x][agent.y].occupied = True
                     agent.step += 1
+                    self.paths[agent.name].append(self.schedule[agent.name][0])
                     self.schedule[agent.name].pop(0)
             
             # Goal reached, evaluate performance
@@ -76,6 +80,7 @@ class Simulator:
     def update(self, *args):
         if simulation_finished(self.agents):
             self.planner.evaluate(self.grid, self.agents)
+            #print ("Paths traveled: ", self.paths)
             sys.exit()
         if (self.rendercount % 10) == 0:
             deviations = self.deviate()
@@ -176,6 +181,7 @@ class Simulator:
         nxt = self.schedule[agent.name][0]
         if curr == nxt:
             agent.iswaiting = True
+            self.paths[agent.name].append(agent.pos)
             self.schedule[agent.name].pop(0)
             return currentP
         # Update and return new position
@@ -189,6 +195,7 @@ class Simulator:
             agent.x, agent.y = agent.pos[0], agent.pos[1]
             self.grid.grid[agent.x][agent.y].occupied = True
             agent.step += 1
+            self.paths[agent.name].append(agent.pos)
             self.schedule[agent.name].pop(0)
         return newpos
 

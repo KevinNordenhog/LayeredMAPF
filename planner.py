@@ -19,7 +19,7 @@ class Planner:
     delay_tolerance = sys.maxsize
     stalling = True
     #stalling = False
-    stalling_bound = 2
+    stalling_bound = 3
 
     # Evaluation data
     time_global = 0
@@ -116,7 +116,8 @@ class Planner:
     def stallComponent(self, deviations, agents, stalled_agents, agent):
         if self.stalling and not deviations == []:
             if agent in stalled_agents:
-                return            
+                return
+            agents[agent].stall += 1            
             if self.stalling_bound > 0:
                 comp = getBoundedComponent(self.schedule, agent, 0, self.stalling_bound)
             else:

@@ -19,7 +19,7 @@ class Planner:
     delay_tolerance = sys.maxsize
     stalling = True
     #stalling = False
-    stalling_bound = 3
+    stalling_bound = 0
 
     # Evaluation data
     time_global = 0
@@ -97,6 +97,7 @@ class Planner:
                     addStall = True
                     self.stallComponent(deviations, agents, stalled_agents, agent)
                     for a in agents:
+                        print ("Stall %s: %d" % (a, agents[a].stall))
                         if agents[a].stall > self.stalling_bound and not self.stalling_bound == 0:
                             recompute = True 
                 else:
@@ -117,17 +118,25 @@ class Planner:
         if self.stalling and not deviations == []:
             if agent in stalled_agents:
                 return
-            agents[agent].stall += 1            
+            tmp = self.schedule[agent].pop(0) # Temporally remove next pos
+            agents[agent].stall += 1 
             if self.stalling_bound > 0:
                 comp = getBoundedComponent(self.schedule, agent, 0, self.stalling_bound)
             else:
                 comp = getComponent(self.schedule, agent, 0)            
+            # Debug
+            print ("Component:", comp)
+            for a in agents:
+                print (a, ":", getComponent(self.schedule, a, 0,))
+                print (self.schedule[a])
+            print ("")
             for a in comp:
                 #We do not want to stall any agents more than once
                 if not a in stalled_agents and not a in deviations:
                     agents[a].stall += 1
                     self.schedule[a].insert(0, agents[a].pos)
                     stalled_agents.append(a)
+            self.schedule[agent].insert(0, tmp)
 
     
     # Evaluate the execution

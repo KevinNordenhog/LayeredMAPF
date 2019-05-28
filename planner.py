@@ -20,6 +20,7 @@ class Planner:
     stalling = True
     #stalling = False
     stalling_bound = 0
+    comp_schedule = {}
 
     # Evaluation data
     time_global = 0
@@ -85,6 +86,9 @@ class Planner:
         #    self.globalPlanner(grid, agents)
         #    return
         # Check if delay is small enough to skip recomputation
+        for agent in agents:
+            self.comp_schedule[agent] = [agents[agent].pos] + self.schedule[agent]
+
         self.local = True
         addStall = False
         recompute = False
@@ -97,7 +101,6 @@ class Planner:
                     addStall = True
                     self.stallComponent(deviations, agents, stalled_agents, agent)
                     for a in agents:
-                        print ("Stall %s: %d" % (a, agents[a].stall))
                         if agents[a].stall > self.stalling_bound and not self.stalling_bound == 0:
                             recompute = True 
                 else:
@@ -121,15 +124,9 @@ class Planner:
             tmp = self.schedule[agent].pop(0) # Temporally remove next pos
             agents[agent].stall += 1 
             if self.stalling_bound > 0:
-                comp = getBoundedComponent(self.schedule, agent, 0, self.stalling_bound)
+                comp = getBoundedComponent(self.comp_schedule, agent, 0, self.stalling_bound)
             else:
-                comp = getComponent(self.schedule, agent, 0)            
-            # Debug
-            print ("Component:", comp)
-            for a in agents:
-                print (a, ":", getComponent(self.schedule, a, 0,))
-                print (self.schedule[a])
-            print ("")
+                comp = getComponent(self.comp_schedule, agent, 0)            
             for a in comp:
                 #We do not want to stall any agents more than once
                 if not a in stalled_agents and not a in deviations:

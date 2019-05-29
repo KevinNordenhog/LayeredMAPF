@@ -30,15 +30,15 @@ class Simulator:
         self.schedule = self.planner.schedule
         self.paths = {}
         for agent in self.agents:
-            self.paths[agent] = [self.agents[agent].pos]
+            self.paths[agent] = []
 
     # Start the simulation, plot the grid and update it continously
     def simulate(self, delays, animate, prob_delay):
         self.delays = delays
         self.animate = animate
         self.delay_probability = prob_delay
-        self.stepcount = 0
         if self.animate:
+            self.stepcount = 0
             self.fig = plt.figure()
             self.ax = self.fig.add_subplot(111, aspect='equal')
             self.createfig()
@@ -56,7 +56,8 @@ class Simulator:
                     recalc = self.planner.localplanner(deviations, self.grid, self.agents)
                     if recalc:
                         self.schedule = self.planner.schedule
-                self.stepcount += 1
+                        for agent in self.schedule:
+                            self.schedule[agent].pop(0)
                 # Move agents
                 for agent in self.agents.values():
                     if (agent.pos == agent.goal and 
@@ -80,7 +81,6 @@ class Simulator:
     def update(self, *args):
         if simulation_finished(self.agents):
             self.planner.evaluate(self.grid, self.agents)
-            #print ("Paths traveled: ", self.paths)
             sys.exit()
         if (self.rendercount % 10) == 0:
             deviations = self.deviate()
@@ -108,6 +108,8 @@ class Simulator:
         # Delay agents based on delay probability
         if self.delays:
             for agent in self.agents.values():
+                if not self.schedule[agent.name]:
+                    continue
                 if random.randint(0,100) < self.delay_probability:
                     deviations += [agent.name]
                     self.schedule[agent.name].insert(0, agent.pos)
@@ -174,15 +176,16 @@ class Simulator:
         agent.rendercount += 1
         if agent.iswaiting:
             agent.iswaiting = agent.rendercount % 10
-            if not agent.iswaiting:
-                agent.step += 1
             return currentP
         curr = agent.pos
         nxt = self.schedule[agent.name][0]
         if curr == nxt:
+            if len(self.schedule[agent.name]) == 1:
+                return currentP
             agent.iswaiting = True
             self.paths[agent.name].append(agent.pos)
             self.schedule[agent.name].pop(0)
+            agent.step += 1
             return currentP
         # Update and return new position
         newpos = tuple(map(operator.add,
@@ -194,9 +197,9 @@ class Simulator:
             agent.pos = nxt
             agent.x, agent.y = agent.pos[0], agent.pos[1]
             self.grid.grid[agent.x][agent.y].occupied = True
-            agent.step += 1
             self.paths[agent.name].append(agent.pos)
             self.schedule[agent.name].pop(0)
+            agent.step += 1
         return newpos
 
 # Create a dictonary containing all agents
@@ -223,9 +226,9 @@ if __name__ == "__main__":
     parser.add_argument("map", help="input file containing map")
     parser.add_argument("alg", help="algorithms: cbs, castar")
     args = parser.parse_args()
-    delays = True   # If delays should be present
-    prob_delay = 10  # Percentage of delay at each step
-    animate = True  # If simulation should be animated
+    delays = True    # If delays should be present
+    prob_delay = 5  # Percentage of delay at each step
+    animate = True   # If simulation should be animated
     delay_tolerance = 1
 
 

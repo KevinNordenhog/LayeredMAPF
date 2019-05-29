@@ -31,6 +31,8 @@ class Planner:
     no_stalls = 0
     no_recalc = 0
     local = False
+    tot_makespan = 0
+    tot_sic = 0
 
     def __init__(self, grid, agents, alg, tolerance):
         self.planner = alg
@@ -153,12 +155,12 @@ class Planner:
         print ("----------------------------------")
         # Local planner evaluation
         if self.local:
-            tot_makespan = 0
-            tot_sic = 0
+            self.tot_makespan = 0
+            self.tot_sic = 0
             for name, agent in agents.items():
-                tot_sic += agent.step - 1
-                if agent.step > tot_makespan:
-                    tot_makespan = agent.step - 1
+                self.tot_sic += agent.step - 1
+                if agent.step > self.tot_makespan:
+                    self.tot_makespan = agent.step - 1
             print ("\n----------------------------------")
             print ("Evaluation (local planner):")
             print ("----------------------------------")
@@ -167,8 +169,8 @@ class Planner:
             print ("Number of deviations: %d" % self.deviation_count)
             print ("Total number of deviation: %d" % self.tot_deviations)
             print ("Local planner executions: %d" % len(self.time_local))
-            print ("Total makespan: %d" % tot_makespan)
-            print ("Total sum of individual cost: %d" % tot_sic)
+            print ("Total makespan: %d" % self.tot_makespan)
+            print ("Total sum of individual cost: %d" % self.tot_sic)
             print ("Number of stalls: %d" % self.no_stalls)
             print ("Number of recalculations: %d" % self.no_recalc)
             print ("----------------------------------")

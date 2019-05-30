@@ -30,6 +30,9 @@ def makespan(solution):
 def getBoundedComponent(schedule, agent, start, bound):
     make = makespan(schedule)
     component = [agent]
+    # If agent has reached its goal
+    if not schedule[agent]:
+        return component
 
     finished = False
     while not finished:

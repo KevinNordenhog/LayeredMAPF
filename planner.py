@@ -19,7 +19,8 @@ class Planner:
     delay_tolerance = sys.maxsize
     stalling = True
     #stalling = False
-    stalling_bound = 2
+    stalling_bound = 0
+    comp_schedule = {}
 
     # Evaluation data
     time_global = 0
@@ -30,6 +31,8 @@ class Planner:
     no_stalls = 0
     no_recalc = 0
     local = False
+    tot_makespan = 0
+    tot_sic = 0
 
     def __init__(self, grid, agents, alg, tolerance):
         self.planner = alg
@@ -85,6 +88,9 @@ class Planner:
         #    self.globalPlanner(grid, agents)
         #    return
         # Check if delay is small enough to skip recomputation
+        for agent in agents:
+            self.comp_schedule[agent] = [agents[agent].pos] + self.schedule[agent]
+
         self.local = True
         addStall = False
         recompute = False
@@ -116,17 +122,20 @@ class Planner:
     def stallComponent(self, deviations, agents, stalled_agents, agent):
         if self.stalling and not deviations == []:
             if agent in stalled_agents:
-                return            
+                return
+            tmp = self.schedule[agent].pop(0) # Temporally remove next pos
+            agents[agent].stall += 1 
             if self.stalling_bound > 0:
-                comp = getBoundedComponent(self.schedule, agent, 0, self.stalling_bound)
+                comp = getBoundedComponent(self.comp_schedule, agent, 0, self.stalling_bound)
             else:
-                comp = getComponent(self.schedule, agent, 0)            
+                comp = getComponent(self.comp_schedule, agent, 0)            
             for a in comp:
                 #We do not want to stall any agents more than once
                 if not a in stalled_agents and not a in deviations:
                     agents[a].stall += 1
                     self.schedule[a].insert(0, agents[a].pos)
                     stalled_agents.append(a)
+            self.schedule[agent].insert(0, tmp)
 
     
     # Evaluate the execution
@@ -146,12 +155,12 @@ class Planner:
         print ("----------------------------------")
         # Local planner evaluation
         if self.local:
-            tot_makespan = 0
-            tot_sic = 0
+            self.tot_makespan = 0
+            self.tot_sic = 0
             for name, agent in agents.items():
-                tot_sic += agent.step - 1
-                if agent.step > tot_makespan:
-                    tot_makespan = agent.step - 1
+                self.tot_sic += agent.step - 1
+                if agent.step > self.tot_makespan:
+                    self.tot_makespan = agent.step - 1
             print ("\n----------------------------------")
             print ("Evaluation (local planner):")
             print ("----------------------------------")
@@ -160,8 +169,8 @@ class Planner:
             print ("Number of deviations: %d" % self.deviation_count)
             print ("Total number of deviation: %d" % self.tot_deviations)
             print ("Local planner executions: %d" % len(self.time_local))
-            print ("Total makespan: %d" % tot_makespan)
-            print ("Total sum of individual cost: %d" % tot_sic)
+            print ("Total makespan: %d" % self.tot_makespan)
+            print ("Total sum of individual cost: %d" % self.tot_sic)
             print ("Number of stalls: %d" % self.no_stalls)
             print ("Number of recalculations: %d" % self.no_recalc)
             print ("----------------------------------")

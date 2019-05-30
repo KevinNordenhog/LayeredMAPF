@@ -1,0 +1,26 @@
+
+Tolerance: 0
+Total time: 13927.074075
+Success rate: 56%
+Average run-time: 12.778820
+Median run-time: 1.362244
+Variance (runtime): 43.702160
+Average generated nodes: 6073
+Median generated nodes: 2431
+Average sic: 234.91
+Median sic: 235.00
+Average makespan: 29.52
+Median makespan: 29.00
+
+Tolerance: 1
+Total time: 13096.056983
+Success rate: 60%
+Average run-time: 18.070179
+Median run-time: 1.610512
+Variance (runtime): 48.248753
+Average generated nodes: 7695
+Median generated nodes: 1737
+Average sic: 237.23
+Median sic: 237.00
+Average makespan: 29.62
+Median makespan: 29.00

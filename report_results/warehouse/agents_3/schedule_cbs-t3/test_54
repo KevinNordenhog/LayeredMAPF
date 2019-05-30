@@ -1,0 +1,10 @@
+Schedule:
+ agent0: []
+agent1: []
+agent2: []
+
+
+Nodes: 35
+SIC: 38
+Makespan: 18
+Run-time: 0.039678

@@ -69,7 +69,10 @@ class Planner:
             self.schedule = alg.schedule
             self.cost = sic(self.schedule)
             self.makespan = makespan(self.schedule)
-            self.delay_tolerance = 0#post(self.schedule)
+            if self.planner == "tailcbs":
+                self.delay_tolerance = post(self.schedule)
+            else:
+                self.delay_tolerance = 0
 
             # Reset parameters when stalling
             if self.stalling:
@@ -160,13 +163,10 @@ class Planner:
             self.tot_makespan = makespan(paths) + 1
             for name, agent in agents.items():
                 self.tot_sic += len(paths[agent.name])
-                #self.tot_sic += agent.step 
-                #if agent.step > self.tot_makespan:
-                #    self.tot_makespan = agent.step
             print ("\n----------------------------------")
             print ("Evaluation (local planner):")
             print ("----------------------------------")
-            print ("Planner: delay tolerance")
+            print ("Planner: ?")
             print ("Total excution time: %f" % sum(self.time_local))
             print ("Number of deviations: %d" % self.deviation_count)
             print ("Total number of deviation: %d" % self.tot_deviations)
@@ -176,6 +176,9 @@ class Planner:
             print ("Number of stalls: %d" % self.no_stalls)
             print ("Number of recalculations: %d" % self.no_recalc)
             print ("----------------------------------")
+        else:
+            self.tot_sic = sic(self.init_schedule)
+            self.tot_makespan = makespan(self.init_schedule)
     
 
 # Put the values in the dictionary into a list

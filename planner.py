@@ -69,7 +69,7 @@ class Planner:
             self.schedule = alg.schedule
             self.cost = sic(self.schedule)
             self.makespan = makespan(self.schedule)
-            self.delay_tolerance = post(self.schedule)
+            self.delay_tolerance = 0#post(self.schedule)
 
             # Reset parameters when stalling
             if self.stalling:
@@ -157,12 +157,12 @@ class Planner:
         if self.local:
             #self.tot_makespan = 0
             self.tot_sic = 0
-            self.tot_makespan = makespan(paths)
+            self.tot_makespan = makespan(paths) + 1
             for name, agent in agents.items():
                 self.tot_sic += len(paths[agent.name])
-                #self.tot_sic += agent.step - 1
+                #self.tot_sic += agent.step 
                 #if agent.step > self.tot_makespan:
-                    #self.tot_makespan = agent.step - 1
+                #    self.tot_makespan = agent.step
             print ("\n----------------------------------")
             print ("Evaluation (local planner):")
             print ("----------------------------------")

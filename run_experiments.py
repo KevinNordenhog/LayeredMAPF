@@ -30,8 +30,8 @@ def variance(values):
 
 def test(agents, delay_tolerance, global_planner, genmap):
     # Test parameters
-    test_no = 10
-    size = "warehouse" # "n" or "warehouse"
+    test_no = 100
+    size = 8 # "n" or "warehouse"
     density = 0
     path_map = "results/agents_%d/maps" % agents
     delay_toggle = True
@@ -82,14 +82,16 @@ def test(agents, delay_tolerance, global_planner, genmap):
         # Path finding
         try:
             print ("\nRunning test %d" % i)
+            # Pathfinding
             sim = simulator.Simulator(world, global_planner, delay_tolerance)
-            sim.simulate(delay_toggle, animate, prob_delay)
             # Save runtime data
             nodes += [sim.planner.node_cnt]
             sic += [sim.planner.cost]
             makespan += [sim.planner.makespan]
             r_time = time.time()-t
             runtime += [r_time]
+            # Simulate with delays
+            sim.simulate(delay_toggle, animate, prob_delay)
             # Local planner data
             dev_count += [sim.planner.deviation_count]
             tot_dev += [sim.planner.tot_deviations]
@@ -194,7 +196,7 @@ def test(agents, delay_tolerance, global_planner, genmap):
 
 if __name__ == "__main__":
     agents_min = 3
-    agents_max = 8
+    agents_max = 13
     tolerance_min = 0
     tolerance_max = 3
     for agents in range(agents_min, agents_max+1):

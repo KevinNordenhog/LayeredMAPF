@@ -37,6 +37,7 @@ class Simulator:
         self.delays = delays
         self.animate = animate
         self.delay_probability = prob_delay
+        #print (self.schedule)
         if self.animate:
             self.stepcount = 0
             self.fig = plt.figure()
@@ -49,6 +50,8 @@ class Simulator:
             plt.show()
         # Used for testing without graphical interface
         else:
+            for agent in self.schedule:
+                self.schedule[agent].pop(0)
             while not simulation_finished(self.agents):
                 # Create deviations
                 deviations = self.deviate()
@@ -74,7 +77,8 @@ class Simulator:
                     self.schedule[agent.name].pop(0)
             
             # Goal reached, evaluate performance
-            self.planner.evaluate(self.grid, self.agents)
+            self.planner.evaluate(self.grid, self.agents, self.paths)
+            #print (self.paths)
 
     # Create deviations and run local planner if necessary,
     # then move agents and update figure
@@ -228,7 +232,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     delays = True    # If delays should be present
     prob_delay = 5  # Percentage of delay at each step
-    animate = True   # If simulation should be animated
+    animate = False # If simulation should be animated
     delay_tolerance = 1
 
 

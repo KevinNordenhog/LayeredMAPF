@@ -17,7 +17,7 @@ class Planner:
     makespan = 0
     planner = "Planner not chosen"
     delay_tolerance = sys.maxsize
-    stalling = True
+    stalling = False
     #stalling = False
     stalling_bound = 0
     comp_schedule = {}
@@ -41,7 +41,7 @@ class Planner:
         self.globalPlanner(grid, agents)
         self.init_schedule = deepcopy(self.schedule)
         self.time_global = time.time()-time_start
-        self.evaluate(grid, agents)
+        self.evaluate(grid, agents, {})
 
 
     # Find a MAPF plan for the given grid, agents, and algorithm
@@ -140,7 +140,7 @@ class Planner:
     
     # Evaluate the execution
     # (Local planner is only evaluated if executed)
-    def evaluate(self, grid, agents):
+    def evaluate(self, grid, agents, paths):
         # Global planner evaluation
         print ("----------------------------------")
         print ("Evaluation (global planner):")
@@ -155,12 +155,14 @@ class Planner:
         print ("----------------------------------")
         # Local planner evaluation
         if self.local:
-            self.tot_makespan = 0
+            #self.tot_makespan = 0
             self.tot_sic = 0
+            self.tot_makespan = makespan(paths)
             for name, agent in agents.items():
-                self.tot_sic += agent.step - 1
-                if agent.step > self.tot_makespan:
-                    self.tot_makespan = agent.step - 1
+                self.tot_sic += len(paths[agent.name])
+                #self.tot_sic += agent.step - 1
+                #if agent.step > self.tot_makespan:
+                    #self.tot_makespan = agent.step - 1
             print ("\n----------------------------------")
             print ("Evaluation (local planner):")
             print ("----------------------------------")

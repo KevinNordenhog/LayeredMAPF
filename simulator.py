@@ -114,7 +114,7 @@ class Simulator:
             for agent in self.agents.values():
                 if not self.schedule[agent.name]:
                     continue
-                if random.randint(0,100) < self.delay_probability:
+                if random.randint(0,1000) < self.delay_probability*10:
                     deviations += [agent.name]
                     self.schedule[agent.name].insert(0, agent.pos)
                     agent.delay += 1

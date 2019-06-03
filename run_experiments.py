@@ -35,7 +35,7 @@ def test(agents, delay_tolerance, global_planner, genmap):
     density = 0
     path_map = "results/agents_%d/maps" % agents
     delay_toggle = True
-    prob_delay = 5
+    prob_delay = 7.5
     animate = False
     # Generate map
     if genmap:
@@ -69,6 +69,7 @@ def test(agents, delay_tolerance, global_planner, genmap):
     recalculations = []
 
     failed_tests = 0
+    tests = []
     # Run and evaluate algorithm on 100 maps
     for i in range(test_no):
         # Load map
@@ -90,16 +91,6 @@ def test(agents, delay_tolerance, global_planner, genmap):
             makespan += [sim.planner.makespan]
             r_time = time.time()-t
             runtime += [r_time]
-            # Simulate with delays
-            sim.simulate(delay_toggle, animate, prob_delay)
-            # Local planner data
-            dev_count += [sim.planner.deviation_count]
-            tot_dev += [sim.planner.tot_deviations]
-            local_runtime += sim.planner.time_local #this already is a list of times
-            total_makespan += [sim.planner.tot_makespan]
-            total_sic += [sim.planner.tot_sic]
-            stalls += [sim.planner.no_stalls]
-            recalculations += [sim.planner.no_recalc]
             # Save schedule and test statistics
             f = open(path_schedule+"/test_%d"%i, "w")
             schedule = ""
@@ -112,8 +103,32 @@ def test(agents, delay_tolerance, global_planner, genmap):
                     + "Run-time: %.6f\n" % r_time)
             f.write(data)
             f.close()
+            # Simulate with delays
+            sim.simulate(delay_toggle, animate, prob_delay)
+            # Local planner data
+            dev_count += [sim.planner.deviation_count]
+            tot_dev += [sim.planner.tot_deviations]
+            local_runtime += sim.planner.time_local #this already is a list of times
+            total_makespan += [sim.planner.tot_makespan]
+            total_sic += [sim.planner.tot_sic]
+            stalls += [sim.planner.no_stalls]
+            recalculations += [sim.planner.no_recalc]
+            # Save local planner data and statistics
+            f = open(path_schedule+"/test_%d"%i, "w")
+            data += ("\nLocal runtime: %s\n" % sim.planner.time_local
+                    + "Sum local runtime: %s\n" % sum(sim.planner.time_local)
+                    + "Unique deviations: %s\n" % sim.planner.deviation_count
+                    + "Total deviations: %s\n" % sim.planner.tot_deviations
+                    + "Makespan: %s\n" % sim.planner.tot_makespan
+                    + "SIC: %s\n" % sim.planner.tot_sic
+                    + "Stalls: %s\n" % sim.planner.no_stalls
+                    + "Recalculations: %s\n" % sim.planner.no_recalc)
+            f.write(data)
+            f.close()
+            tests += [1]
         except Timeout:
             failed_tests += 1
+            tests += [0]
             print("Took too long (>5 minutes)")
 
     # Special case when all tests run for over 5min
@@ -127,10 +142,10 @@ def test(agents, delay_tolerance, global_planner, genmap):
     print ("Total time: %.6f" % tot_time)
     print ("Success rate: %d%%" % (100-failed_tests))
     # Overview of all 100 instances
-    nodes = sorted(nodes)
-    sic = sorted(sic)
-    makespan = sorted(makespan)
-    runtime = sorted(runtime)
+    nodes = nodes
+    sic = sic
+    makespan = makespan
+    runtime = runtime
     avg_nodes = sum(nodes)/len(nodes)
     avg_runtime = sum(runtime)/len(runtime)
     avg_sic = sum(sic)/len(sic)
@@ -154,16 +169,15 @@ def test(agents, delay_tolerance, global_planner, genmap):
     results += "Median sic: %.2f\n" % median_sic
     results += "Average makespan: %.2f\n" % avg_makespan
     results += "Median makespan: %.2f\n" % median_makespan
+    # More detailed
+    results += "\nAll values:\n"
+    results += "Run-time: %s\n" % runtime
+    results += "Generated nodes: %s\n" % nodes
+    results += "SIC: %s\n" % sic
+    results += "Makespan: %s\n" % makespan
+    results += "Successful tests: %s\n" % tests
 
     #Local
-    dev_count = sorted(dev_count)
-    tot_dev = sorted(tot_dev)
-    local_runtime = sorted(local_runtime)
-    total_makespan = sorted(total_makespan)
-    total_sic =sorted(total_sic)
-    stalls = sorted(stalls)
-    recalculations = sorted(recalculations)
-
     avg_dev_count = sum(dev_count)/len(dev_count)
     avg_tot_dev = sum(tot_dev)/len(tot_dev)
     avg_total_makespan = sum(total_makespan)/len(total_makespan)
@@ -185,11 +199,15 @@ def test(agents, delay_tolerance, global_planner, genmap):
     results += "Local\n"
     results += "Average number of unique deviations: %.2f\n" % avg_dev_count 
     results += "Average number of deviations: %.2f\n" % avg_tot_dev
+    results += "Total runtime of local planner: %.6f\n" % sum(local_runtime)
     results += "Average runtime of local planner: %.6f\n" % avg_local_runtime
     results += "Average makespan after execution: %.2f\n" % avg_total_makespan
     results += "Average SIC after execution: %.2f\n" % avg_total_sic
     results += "Average number of stalls: %.2f\n" % avg_stalls
     results += "Average number of recalculations: %.2f\n" % avg_recalculations
+    # More detailed results
+    results += "\nAll values:\n"
+    results += "Run-time: %s\n" % local_runtime
     results += "--------------------------\n"
     
     return results

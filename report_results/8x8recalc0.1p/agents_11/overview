@@ -1,0 +1,24 @@
+
+Global
+Tolerance: 0
+Total time: 2345.208277
+Success rate: 93%
+Average run-time: 2.606382
+Median run-time: 0.099456
+Variance (runtime): 12.202404
+Average generated nodes: 1775
+Median generated nodes: 198
+Average sic: 59.67
+Median sic: 61.00
+Average makespan: 9.91
+Median makespan: 10.00
+
+Local
+Average number of unique deviations: 0.05
+Average number of deviations: 0.05
+Average runtime of local planner: 0.004919
+Average makespan after execution: 9.91
+Average SIC after execution: 59.67
+Average number of stalls: 0.00
+Average number of recalculations: 0.05
+--------------------------

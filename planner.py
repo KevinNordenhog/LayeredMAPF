@@ -18,7 +18,6 @@ class Planner:
     planner = "Planner not chosen"
     delay_tolerance = sys.maxsize
     stalling = False
-    #stalling = False
     stalling_bound = 0
     comp_schedule = {}
 
@@ -42,6 +41,8 @@ class Planner:
         self.init_schedule = deepcopy(self.schedule)
         self.time_global = time.time()-time_start
         self.evaluate(grid, agents, {})
+        
+        self.time_local = []
 
 
     # Find a MAPF plan for the given grid, agents, and algorithm

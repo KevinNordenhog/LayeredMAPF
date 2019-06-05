@@ -1,0 +1,19 @@
+Schedule:
+ agent0: [(3, 6), (3, 5), (3, 4), (3, 3), (3, 2), (4, 2), (5, 2)]
+agent1: [(4, 1), (4, 2), (4, 3), (4, 4), (4, 5)]
+agent2: [(4, 2), (3, 2), (2, 2), (1, 2), (0, 2), (0, 3)]
+
+
+Nodes: 1
+SIC: 15
+Makespan: 6
+Run-time: 0.000593
+
+Local runtime: [0.00032329559326171875, 0.000133514404296875, 7.62939453125e-05]
+Sum local runtime: 0.0005331039428710938
+Unique deviations: 3
+Total deviations: 3
+Makespan: 6
+SIC: 15
+Stalls: 0
+Recalculations: 3
